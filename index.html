@@ -307,8 +307,8 @@
       <span class="sub">Ingeniería inversa</span>
     </a>
     <nav class="nav-links" aria-label="Secciones">
-      <a href="#sistema">Sistema</a>
       <a href="#recorrido">Recorrido</a>
+      <a href="#sistema">Sistema</a>
       <a href="#stack">Stack</a>
       <a href="#flujos">Flujos</a>
       <a href="#diagnostico">Diagnóstico</a>
@@ -349,28 +349,10 @@
   </div>
 </div>
 
-<!-- ===== 01 SISTEMA ===== -->
-<section class="section" id="sistema">
-  <div class="wrap rv">
-    <span class="eyebrow">01 — Panorama</span>
-    <h2>El sistema en una frase</h2>
-    <p class="lead" style="margin-top:22px">
-      Voicebot de calificación de leads inmobiliarios y comerciales para ATISA. <span class="b">Vapi.ai</span> maneja la voz; <span class="b">n8n</span> maneja toda la lógica. Atiende la llamada, identifica al cliente en <span class="b">Supabase</span>, lo enruta a un agente especializado según su etapa (<span class="mono">flow_step</span>), extrae datos de la conversación con IA y los sincroniza con <span class="b">Zoho CRM</span>. Si hace falta, transfiere a un humano vía <span class="b">Twilio</span>.
-    </p>
-    <p class="eyebrow" style="margin:40px 0 0">Revelaciones clave</p>
-    <div class="reveals">
-      <div class="reveal"><span class="k">No es una sola plataforma</span><p>Hay <b>2 cuentas de <span class="b">Twilio</span></b> (ATISA/"TendencIA" y "American Phone") y un endpoint propio en <span class="mono">api.tendencia.ai</span>. El proveedor M Consulting es <b>TendencIA</b>.</p></div>
-      <div class="reveal"><span class="k">Los "agentes Navi" NO son IA</span><p>Son <b>prompts de texto</b> guardados en nodos Set que <span class="b">n8n</span> le devuelve a <span class="b">Vapi</span>. Vapi corre la conversación; n8n solo le pasa el prompt y las tools.</p></div>
-      <div class="reveal"><span class="k">La IA real corre después</span><p>Los modelos de lenguaje solo corren <b>DESPUÉS de la llamada</b>, para extraer variables y resumir.</p></div>
-      <div class="reveal"><span class="k">Mezcla de modelos sin criterio</span><p><span class="b">Gemini 2.5 Flash</span>, <span class="b">GPT-4.1</span>, <span class="b">GPT-4o</span>, <span class="b">o4-mini</span> y <span class="b">Claude 3.7 Sonnet</span>. Notas de los devs: "Probar con Gemini", "Probar con GPT 4.1 o o4 mini", "REVISAR TIEMPO". Se entregó experimental.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 02 RECORRIDO (FLOW MAP) ===== -->
+<!-- ===== 01 RECORRIDO (FLOW MAP) ===== -->
 <section class="section" id="recorrido">
   <div class="wrap rv">
-    <span class="eyebrow">02 — Recorrido</span>
+    <span class="eyebrow">01 — Recorrido</span>
     <h2>El recorrido de una llamada</h2>
     <p class="lead" style="margin:22px 0 18px">El proceso completo de punta a punta. Pasa el cursor (o el foco) sobre cualquier pieza para resaltar sus conexiones, y <b style="color:var(--ink);font-weight:600">arrastra los recuadros</b> para reacomodarlos y leer mejor el cableado. Las líneas se reajustan solas. El estado vive en <span class="b">Supabase</span>, y casi todo lo toca.</p>
     <div class="flowmap-frame">
@@ -448,6 +430,24 @@
 
         <div class="fm-phase"><div class="pz"><small>Frontera</small>Durante / después de la llamada</div></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 SISTEMA ===== -->
+<section class="section" id="sistema">
+  <div class="wrap rv">
+    <span class="eyebrow">02 — Panorama</span>
+    <h2>El sistema en una frase</h2>
+    <p class="lead" style="margin-top:22px">
+      Voicebot de calificación de leads inmobiliarios y comerciales para ATISA. <span class="b">Vapi.ai</span> maneja la voz; <span class="b">n8n</span> maneja toda la lógica. Atiende la llamada, identifica al cliente en <span class="b">Supabase</span>, lo enruta a un agente especializado según su etapa (<span class="mono">flow_step</span>), extrae datos de la conversación con IA y los sincroniza con <span class="b">Zoho CRM</span>. Si hace falta, transfiere a un humano vía <span class="b">Twilio</span>.
+    </p>
+    <p class="eyebrow" style="margin:40px 0 0">Revelaciones clave</p>
+    <div class="reveals">
+      <div class="reveal"><span class="k">No es una sola plataforma</span><p>Hay <b>2 cuentas de <span class="b">Twilio</span></b> (ATISA/"TendencIA" y "American Phone") y un endpoint propio en <span class="mono">api.tendencia.ai</span>. El proveedor M Consulting es <b>TendencIA</b>.</p></div>
+      <div class="reveal"><span class="k">Los "agentes Navi" NO son IA</span><p>Son <b>prompts de texto</b> guardados en nodos Set que <span class="b">n8n</span> le devuelve a <span class="b">Vapi</span>. Vapi corre la conversación; n8n solo le pasa el prompt y las tools.</p></div>
+      <div class="reveal"><span class="k">La IA real corre después</span><p>Los modelos de lenguaje solo corren <b>DESPUÉS de la llamada</b>, para extraer variables y resumir.</p></div>
+      <div class="reveal"><span class="k">Mezcla de modelos sin criterio</span><p><span class="b">Gemini 2.5 Flash</span>, <span class="b">GPT-4.1</span>, <span class="b">GPT-4o</span>, <span class="b">o4-mini</span> y <span class="b">Claude 3.7 Sonnet</span>. Notas de los devs: "Probar con Gemini", "Probar con GPT 4.1 o o4 mini", "REVISAR TIEMPO". Se entregó experimental.</p></div>
     </div>
   </div>
 </section>
