@@ -181,15 +181,15 @@
   .rail-head .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
   .rail-head .s{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
   .rail{display:grid;grid-template-columns:repeat(6,1fr);gap:0}
-  .step{min-width:0;position:relative;background:transparent;border:none;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0 4px 0 0}
+  .step{min-width:0;position:relative;background:transparent;border:none;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0 4px 0 0;display:flex;flex-direction:column}
   .step .top{display:flex;align-items:center}
   .step .tick{width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--slate);flex:0 0 auto;z-index:2;transition:background .2s,border-color .2s,transform .2s}
   .step .line{height:2px;background:var(--slate);opacity:.4;flex:1 1 auto}
   .step:last-child .line{display:none}
-  .step .body{padding:13px 12px 6px 0}
+  .step .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:14px 12px 4px 0}
   .step .sn{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--slate);font-weight:600}
-  .step .nm{font-family:var(--serif);font-size:16px;font-weight:600;margin-top:5px;line-height:1.18;min-height:2.36em}
-  @media(max-width:640px){.rail{grid-template-columns:repeat(3,1fr)}.step .line{display:none}.step .nm{min-height:0}}
+  .step .nm{font-family:var(--serif);font-size:16px;font-weight:600;margin-top:5px;line-height:1.18}
+  @media(max-width:640px){.rail{grid-template-columns:repeat(3,1fr)}.step .line{display:none}}
   @media(max-width:400px){.rail{grid-template-columns:repeat(2,1fr)}}
   .step[aria-selected="true"] .tick{background:var(--brand);border-color:var(--brand);transform:scale(1.15)}
   .step[aria-selected="true"] .sn{color:var(--brand)}
@@ -481,10 +481,10 @@
 <section class="section" id="estado">
   <div class="wrap rv">
     <span class="eyebrow">04 — Estado</span>
-    <h2>El riel de estados</h2>
-    <p class="lead" style="margin:22px 0 30px">Todo gira en torno a <span class="mono">call_flows.flow_step</span> (entero) = la etapa del embudo. Selecciona un estado para ver qué prompt carga.</p>
+    <h2>El selector de estado</h2>
+    <p class="lead" style="margin:22px 0 30px">El campo <span class="mono">call_flows.flow_step</span> (entero) es un <b>selector por categoría de cliente</b>: según su valor, el Switch carga un prompt distinto. Los números 1–6 son los valores guardados en la base, no un orden de pasos: que Comercial Compra sea el 6 no lo hace "el último", es solo la etiqueta que recibió esa categoría. Selecciona una para ver su prompt.</p>
     <div class="rail-frame">
-      <div class="rail-head"><span class="t">flow_step · tira de telemetría</span><span class="s">1 → 6</span></div>
+      <div class="rail-head"><span class="t">flow_step · selector por categoría</span><span class="s">6 valores</span></div>
       <div class="rail" id="rail" role="tablist" aria-label="Estados del flow_step">
         <button class="step" role="tab" aria-selected="true" data-prompt="Recepción del primer contacto: identifica al cliente y abre el registro." data-name="Nuevo Cliente"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">01</span><span class="nm">Nuevo Cliente</span></span></button>
         <button class="step" role="tab" aria-selected="false" data-prompt="Atiende interés en inmuebles: vivienda y propiedades disponibles." data-name="Inmuebles"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">02</span><span class="nm">Inmuebles</span></span></button>
