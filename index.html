@@ -73,7 +73,6 @@
 
   /* ---------- hero ---------- */
   .hero{padding:72px 0 18px}
-  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:54px;align-items:center}
   .badge{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);border:1px solid #ecc9ca;background:var(--brand-wash);padding:7px 13px;margin-bottom:26px}
   .badge .dot{width:7px;height:7px;background:var(--brand);border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
   h1.title{font-size:clamp(38px,6.4vw,72px);font-weight:600;line-height:.99;letter-spacing:-.02em;margin-bottom:22px;max-width:14ch}
@@ -85,14 +84,6 @@
   .stat:last-child{border-right:none}
   .stat .n{font-family:var(--serif);font-size:34px;font-weight:600;line-height:1;display:block;letter-spacing:-.01em;color:var(--brand)}
   .stat .l{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px;display:block}
-
-  /* oscilloscope card */
-  .scope{border:1px solid var(--hair);background:var(--panel-2);padding:0;position:relative;overflow:hidden}
-  .scope .scope-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--hair);font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
-  .scope .scope-head .live{display:flex;align-items:center;gap:7px;color:var(--brand)}
-  .scope .scope-head .live .d{width:7px;height:7px;border-radius:50%;background:var(--brand);animation:pulse 2.4s ease-in-out infinite}
-  .scope svg{display:block;width:100%;height:auto}
-  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:34px}.scope{order:2}}
 
   /* ---------- logos strip ---------- */
   .strip{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);background:var(--panel-2)}
@@ -146,6 +137,11 @@
   .fmnode:hover,.fmnode:focus-visible{box-shadow:0 6px 22px rgba(20,21,26,.10);transform:translateY(-2px)}
   .flowmap.focusing .fmnode{opacity:.32}
   .flowmap.focusing .fmnode.hot{opacity:1}
+  .flowmap.draggable .fmnode{cursor:grab;touch-action:none}
+  .fmnode.dragging{cursor:grabbing;box-shadow:0 14px 32px rgba(20,21,26,.18);z-index:5!important}
+  .fmnode.dragging:hover{transform:none}
+  .fmreset{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);background:transparent;border:1px solid var(--hair);padding:5px 11px;cursor:pointer;transition:color .18s,border-color .18s}
+  .fmreset:hover{color:var(--brand);border-color:var(--brand)}
   .fmnode.brandtop{border-top-color:var(--brand)}
   .fmnode.statetop{border-top-color:var(--ok)}
   .fmnode .ic{display:flex;align-items:center;gap:8px}
@@ -184,15 +180,17 @@
   .rail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px;gap:14px;flex-wrap:wrap}
   .rail-head .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
   .rail-head .s{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-  .rail{display:flex;gap:0;overflow-x:auto;padding-bottom:6px}
-  .step{flex:1 1 0;min-width:128px;position:relative;background:transparent;border:none;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0 4px 0 0}
+  .rail{display:grid;grid-template-columns:repeat(6,1fr);gap:0}
+  .step{min-width:0;position:relative;background:transparent;border:none;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0 4px 0 0}
   .step .top{display:flex;align-items:center}
   .step .tick{width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--slate);flex:0 0 auto;z-index:2;transition:background .2s,border-color .2s,transform .2s}
   .step .line{height:2px;background:var(--slate);opacity:.4;flex:1 1 auto}
   .step:last-child .line{display:none}
   .step .body{padding:13px 12px 6px 0}
   .step .sn{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--slate);font-weight:600}
-  .step .nm{font-family:var(--serif);font-size:17px;font-weight:600;margin-top:5px;line-height:1.18}
+  .step .nm{font-family:var(--serif);font-size:16px;font-weight:600;margin-top:5px;line-height:1.18;min-height:2.36em}
+  @media(max-width:640px){.rail{grid-template-columns:repeat(3,1fr)}.step .line{display:none}.step .nm{min-height:0}}
+  @media(max-width:400px){.rail{grid-template-columns:repeat(2,1fr)}}
   .step[aria-selected="true"] .tick{background:var(--brand);border-color:var(--brand);transform:scale(1.15)}
   .step[aria-selected="true"] .sn{color:var(--brand)}
   .step:hover .tick{border-color:var(--brand)}
@@ -310,8 +308,8 @@
     </a>
     <nav class="nav-links" aria-label="Secciones">
       <a href="#sistema">Sistema</a>
-      <a href="#stack">Stack</a>
       <a href="#recorrido">Recorrido</a>
+      <a href="#stack">Stack</a>
       <a href="#flujos">Flujos</a>
       <a href="#diagnostico">Diagnóstico</a>
       <a href="#recos">Recos</a>
@@ -324,29 +322,14 @@
 <!-- ===== HERO ===== -->
 <section class="hero">
   <div class="wrap">
-    <div class="hero-grid">
-      <div>
-        <span class="badge"><span class="dot"></span>Ingeniería inversa · ATISA</span>
-        <h1 class="title">ATISA Voicebot<br><em>por dentro</em></h1>
-        <p class="thesis">Un voicebot de calificación de leads sobre <span class="b">Vapi</span> + <span class="b">n8n</span>. Así está armado por dentro, y por qué se cae.</p>
-        <div class="stats" role="list">
-          <div class="stat" role="listitem"><span class="n" data-count="239">0</span><span class="l">Nodos</span></div>
-          <div class="stat" role="listitem"><span class="n" data-count="4">0</span><span class="l">Workflows</span></div>
-          <div class="stat" role="listitem"><span class="n" data-count="6">0</span><span class="l">Estados</span></div>
-          <div class="stat" role="listitem"><span class="n" data-count="7">0</span><span class="l">Servicios</span></div>
-        </div>
-      </div>
-      <div class="scope" aria-hidden="true">
-        <div class="scope-head"><span>Señal · estabilidad</span><span class="live"><span class="d"></span>Inestable</span></div>
-        <svg viewBox="0 0 440 240" fill="none">
-          <g stroke="#E2E4EA" stroke-width="1">
-            <line x1="0" y1="60" x2="440" y2="60"/><line x1="0" y1="120" x2="440" y2="120"/><line x1="0" y1="180" x2="440" y2="180"/>
-            <line x1="110" y1="0" x2="110" y2="240"/><line x1="220" y1="0" x2="220" y2="240"/><line x1="330" y1="0" x2="330" y2="240"/>
-          </g>
-          <path class="draw" style="--len:1180" d="M0,120 L70,120 L86,120 L98,72 L110,168 L124,108 L150,120 L210,120 L226,120 L240,46 L256,196 L270,120 L300,120 L318,120 L330,90 L344,150 L356,120 L440,120"
-            stroke="#D2262C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-        </svg>
-      </div>
+    <span class="badge"><span class="dot"></span>Ingeniería inversa · ATISA</span>
+    <h1 class="title">ATISA Voicebot<br><em>por dentro</em></h1>
+    <p class="thesis">Un voicebot de calificación de leads sobre <span class="b">Vapi</span> + <span class="b">n8n</span>. Así está armado por dentro, y por qué se cae.</p>
+    <div class="stats" role="list">
+      <div class="stat" role="listitem"><span class="n" data-count="239">0</span><span class="l">Nodos</span></div>
+      <div class="stat" role="listitem"><span class="n" data-count="4">0</span><span class="l">Workflows</span></div>
+      <div class="stat" role="listitem"><span class="n" data-count="6">0</span><span class="l">Estados</span></div>
+      <div class="stat" role="listitem"><span class="n" data-count="7">0</span><span class="l">Servicios</span></div>
     </div>
   </div>
 </section>
@@ -384,43 +367,19 @@
   </div>
 </section>
 
-<!-- ===== 02 STACK ===== -->
-<section class="section" id="stack">
-  <div class="wrap rv">
-    <span class="eyebrow">02 — Stack</span>
-    <h2>Stack real</h2>
-    <p class="lead" style="margin:22px 0 34px">Siete servicios externos, cuatro workflows de <span class="b">n8n</span>, una base de estado compartida.</p>
-    <div class="grid">
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v10l-6 4M12 12l6 4M12 12 6 8" stroke="#12A594" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="2.5" r="1.6" fill="#12A594"/><circle cx="6" cy="16" r="1.6" fill="#12A594"/><circle cx="18" cy="16" r="1.6" fill="#12A594"/></svg><span class="role">Voz</span></div><div class="svc">Vapi.ai</div><p class="desc">Eventos assistant-request y end-of-call-report.</p></div>
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="4" cy="12" r="2.4" fill="#EA4B71"/><circle cx="12" cy="7" r="2.4" fill="#EA4B71"/><circle cx="12" cy="17" r="2.4" fill="#EA4B71"/><circle cx="20" cy="12" r="2.4" fill="#EA4B71"/><path d="M6 11 10 8M6 13l4 3M14 7.5 18 11M14 16.5 18 13" stroke="#EA4B71" stroke-width="1.6"/></svg><span class="role">Orquestación</span></div><div class="svc">n8n</div><p class="desc">4 workflows, 239 nodos. Toda la lógica vive aquí.</p></div>
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z" fill="#3ECF8E"/></svg><span class="role">Base de datos</span></div><div class="svc">Supabase</div><p class="desc">users, call_flows, user_property_interests, zoho_updates, call_logs, properties.</p></div>
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="7" r="2.4" fill="#E42527"/><circle cx="12" cy="7" r="2.4" fill="#F9B21D"/><circle cx="19" cy="7" r="2.4" fill="#226DB4"/><circle cx="12" cy="16" r="2.4" fill="#089949"/></svg><span class="role">CRM</span></div><div class="svc">Zoho</div><p class="desc">30 llamadas HTTP, versiones v2 / v2.1 / v7 / v8 mezcladas.</p></div>
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F22F46"/><circle cx="9" cy="9" r="2" fill="#fff"/><circle cx="15" cy="9" r="2" fill="#fff"/><circle cx="9" cy="15" r="2" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#fff"/></svg><span class="role">Telefonía</span></div><div class="svc">Twilio</div><p class="desc">2 cuentas: México (MN) y EE.UU. (USN).</p></div>
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 1 3.8 2.7 4 4 0 0 1 1.9 6.8 4 4 0 0 1-1.9 6.8A4 4 0 0 1 8.2 18.3 4 4 0 0 1 6.3 11.5 4 4 0 0 1 8.2 4.7 4 4 0 0 1 12 3Z" stroke="#0B0B0B" stroke-width="1.6"/></svg><span class="role">IA post-llamada</span></div><div class="svc">OpenRouter + OpenAI</div><p class="desc">Extracción de variables y resúmenes tras colgar.</p></div>
-      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#D2262C" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" stroke="#D2262C" stroke-width="1.5"/></svg><span class="role">Endpoint propio</span></div><div class="svc">api.tendencia.ai</div><p class="desc"><span class="mono">/webhooks/vapi</span> · infraestructura del proveedor.</p></div>
-    </div>
-    <p class="eyebrow" style="margin:36px 0 0">Nodos por workflow</p>
-    <div class="countbar">
-      <div class="count"><div class="cn">78</div><div class="cl">Call Control</div></div>
-      <div class="count"><div class="cn">98</div><div class="cl">Agents B2B</div></div>
-      <div class="count"><div class="cn">42</div><div class="cl">End of Call</div></div>
-      <div class="count"><div class="cn">21</div><div class="cl">Schedule Meeting</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 03 RECORRIDO (FLOW MAP) ===== -->
+<!-- ===== 02 RECORRIDO (FLOW MAP) ===== -->
 <section class="section" id="recorrido">
   <div class="wrap rv">
-    <span class="eyebrow">03 — Recorrido</span>
+    <span class="eyebrow">02 — Recorrido</span>
     <h2>El recorrido de una llamada</h2>
-    <p class="lead" style="margin:22px 0 18px">El proceso completo de punta a punta. Pasa el cursor (o el foco) sobre cualquier pieza para ver con qué se conecta. El estado vive en <span class="b">Supabase</span>, y casi todo lo toca.</p>
+    <p class="lead" style="margin:22px 0 18px">El proceso completo de punta a punta. Pasa el cursor (o el foco) sobre cualquier pieza para resaltar sus conexiones, y <b style="color:var(--ink);font-weight:600">arrastra los recuadros</b> para reacomodarlos y leer mejor el cableado. Las líneas se reajustan solas. El estado vive en <span class="b">Supabase</span>, y casi todo lo toca.</p>
     <div class="flowmap-frame">
       <div class="flowlegend">
         <i><span class="ln"></span>Durante la llamada</i>
         <i><span class="ln w"></span>Escritura en CRM / BD</i>
         <i><span class="ln a"></span>Después de colgar</i>
         <i><span class="sq"></span>Estado compartido (flow_step)</i>
+        <button id="fmReset" type="button" class="fmreset">Reacomodar</button>
       </div>
       <div class="flowmap" id="flowmap">
         <svg class="edges" id="edges" preserveAspectRatio="none" aria-hidden="true">
@@ -489,6 +448,31 @@
 
         <div class="fm-phase"><div class="pz"><small>Frontera</small>Durante / después de la llamada</div></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 03 STACK ===== -->
+<section class="section" id="stack">
+  <div class="wrap rv">
+    <span class="eyebrow">03 — Stack</span>
+    <h2>Stack real</h2>
+    <p class="lead" style="margin:22px 0 34px">Siete servicios externos, cuatro workflows de <span class="b">n8n</span>, una base de estado compartida.</p>
+    <div class="grid">
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v10l-6 4M12 12l6 4M12 12 6 8" stroke="#12A594" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="2.5" r="1.6" fill="#12A594"/><circle cx="6" cy="16" r="1.6" fill="#12A594"/><circle cx="18" cy="16" r="1.6" fill="#12A594"/></svg><span class="role">Voz</span></div><div class="svc">Vapi.ai</div><p class="desc">Eventos assistant-request y end-of-call-report.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="4" cy="12" r="2.4" fill="#EA4B71"/><circle cx="12" cy="7" r="2.4" fill="#EA4B71"/><circle cx="12" cy="17" r="2.4" fill="#EA4B71"/><circle cx="20" cy="12" r="2.4" fill="#EA4B71"/><path d="M6 11 10 8M6 13l4 3M14 7.5 18 11M14 16.5 18 13" stroke="#EA4B71" stroke-width="1.6"/></svg><span class="role">Orquestación</span></div><div class="svc">n8n</div><p class="desc">4 workflows, 239 nodos. Toda la lógica vive aquí.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z" fill="#3ECF8E"/></svg><span class="role">Base de datos</span></div><div class="svc">Supabase</div><p class="desc">users, call_flows, user_property_interests, zoho_updates, call_logs, properties.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="7" r="2.4" fill="#E42527"/><circle cx="12" cy="7" r="2.4" fill="#F9B21D"/><circle cx="19" cy="7" r="2.4" fill="#226DB4"/><circle cx="12" cy="16" r="2.4" fill="#089949"/></svg><span class="role">CRM</span></div><div class="svc">Zoho</div><p class="desc">30 llamadas HTTP, versiones v2 / v2.1 / v7 / v8 mezcladas.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F22F46"/><circle cx="9" cy="9" r="2" fill="#fff"/><circle cx="15" cy="9" r="2" fill="#fff"/><circle cx="9" cy="15" r="2" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#fff"/></svg><span class="role">Telefonía</span></div><div class="svc">Twilio</div><p class="desc">2 cuentas: México (MN) y EE.UU. (USN).</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 1 3.8 2.7 4 4 0 0 1 1.9 6.8 4 4 0 0 1-1.9 6.8A4 4 0 0 1 8.2 18.3 4 4 0 0 1 6.3 11.5 4 4 0 0 1 8.2 4.7 4 4 0 0 1 12 3Z" stroke="#0B0B0B" stroke-width="1.6"/></svg><span class="role">IA post-llamada</span></div><div class="svc">OpenRouter + OpenAI</div><p class="desc">Extracción de variables y resúmenes tras colgar.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#D2262C" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" stroke="#D2262C" stroke-width="1.5"/></svg><span class="role">Endpoint propio</span></div><div class="svc">api.tendencia.ai</div><p class="desc"><span class="mono">/webhooks/vapi</span> · infraestructura del proveedor.</p></div>
+    </div>
+    <p class="eyebrow" style="margin:36px 0 0">Nodos por workflow</p>
+    <div class="countbar">
+      <div class="count"><div class="cn">78</div><div class="cl">Call Control</div></div>
+      <div class="count"><div class="cn">98</div><div class="cl">Agents B2B</div></div>
+      <div class="count"><div class="cn">42</div><div class="cl">End of Call</div></div>
+      <div class="count"><div class="cn">21</div><div class="cl">Schedule Meeting</div></div>
     </div>
   </div>
 </section>
@@ -647,10 +631,6 @@
 (function(){
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---- oscilloscope dasharray ---- */
-  var sig = document.querySelector('.scope .draw');
-  if(sig && !reduce){ try{ sig.style.setProperty('--len', Math.ceil(sig.getTotalLength())); }catch(e){} }
-
   /* ---- count-up ---- */
   function countUp(el){
     var target = +el.getAttribute('data-count');
@@ -784,13 +764,51 @@
       });
       Object.keys(nodeEls).forEach(function(k){ nodeEls[k].classList.toggle('hot', !!connected[k]); });
     }
-    function clearFocus(){ map.classList.remove('focusing'); paths.forEach(function(p){p.classList.remove('hot');}); map.querySelectorAll('.fmnode').forEach(function(n){n.classList.remove('hot');}); }
+    var dragging = null;
+    function clearFocus(){ if(dragging) return; map.classList.remove('focusing'); paths.forEach(function(p){p.classList.remove('hot');}); map.querySelectorAll('.fmnode').forEach(function(n){n.classList.remove('hot');}); }
+
     Object.keys(nodeEls).forEach(function(k){
       var n = nodeEls[k];
-      n.addEventListener('mouseenter', function(){ if(active()) focusNode(k); });
+      n.addEventListener('mouseenter', function(){ if(active() && !dragging) focusNode(k); });
       n.addEventListener('mouseleave', clearFocus);
       n.addEventListener('focus', function(){ if(active()) focusNode(k); });
       n.addEventListener('blur', clearFocus);
+
+      // drag para reacomodar; los conectores se recalculan en cada movimiento
+      n.addEventListener('pointerdown', function(e){
+        if(!active()) return;
+        e.preventDefault();
+        dragging = {id:k, sx:e.clientX, sy:e.clientY, ox:parseFloat(n.style.left)||0, oy:parseFloat(n.style.top)||0};
+        n.classList.add('dragging');
+        try{ n.setPointerCapture(e.pointerId); }catch(_){}
+        focusNode(k);
+      });
+      n.addEventListener('pointermove', function(e){
+        if(!dragging || dragging.id!==k) return;
+        n.style.left = (dragging.ox + (e.clientX-dragging.sx)) + 'px';
+        n.style.top  = (dragging.oy + (e.clientY-dragging.sy)) + 'px';
+        redraw();
+      });
+      function endDrag(){
+        if(!dragging || dragging.id!==k) return;
+        n.classList.remove('dragging');
+        dragging = null;
+        if(active()) focusNode(k); else clearFocus();
+      }
+      n.addEventListener('pointerup', endDrag);
+      n.addEventListener('pointercancel', endDrag);
+    });
+
+    // affordance de arrastre solo cuando el grid esta activo (desktop)
+    function setDragMode(){ map.classList.toggle('draggable', active()); }
+    setDragMode();
+    window.addEventListener('resize', function(){ requestAnimationFrame(setDragMode); });
+
+    // reacomodar: vuelve todo a su lugar
+    var resetBtn = document.getElementById('fmReset');
+    if(resetBtn) resetBtn.addEventListener('click', function(){
+      Object.keys(nodeEls).forEach(function(k){ nodeEls[k].style.left=''; nodeEls[k].style.top=''; });
+      redraw();
     });
   }
 })();
