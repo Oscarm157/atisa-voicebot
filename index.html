@@ -180,20 +180,15 @@
   .rail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px;gap:14px;flex-wrap:wrap}
   .rail-head .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
   .rail-head .s{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-  .rail{display:grid;grid-template-columns:repeat(6,1fr);gap:0}
-  .step{min-width:0;position:relative;background:transparent;border:none;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0 4px 0 0;display:flex;flex-direction:column}
-  .step .top{display:flex;align-items:center}
-  .step .tick{width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--slate);flex:0 0 auto;z-index:2;transition:background .2s,border-color .2s,transform .2s}
-  .step .line{height:2px;background:var(--slate);opacity:.4;flex:1 1 auto}
-  .step:last-child .line{display:none}
-  .step .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:14px 12px 4px 0}
-  .step .sn{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--slate);font-weight:600}
-  .step .nm{font-family:var(--serif);font-size:16px;font-weight:600;margin-top:5px;line-height:1.18}
-  @media(max-width:640px){.rail{grid-template-columns:repeat(3,1fr)}.step .line{display:none}}
-  @media(max-width:400px){.rail{grid-template-columns:repeat(2,1fr)}}
-  .step[aria-selected="true"] .tick{background:var(--brand);border-color:var(--brand);transform:scale(1.15)}
-  .step[aria-selected="true"] .sn{color:var(--brand)}
-  .step:hover .tick{border-color:var(--brand)}
+  .rail{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .step{min-width:0;background:var(--paper);border:1px solid var(--hair);border-top:3px solid var(--slate);font:inherit;color:inherit;text-align:left;cursor:pointer;padding:16px 16px 18px;display:flex;flex-direction:column;gap:8px;min-height:94px;transition:background .18s,box-shadow .18s,border-color .18s}
+  .step:hover{background:var(--panel-2);box-shadow:0 6px 18px rgba(20,21,26,.07)}
+  .step .sn{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);font-weight:600}
+  .step .nm{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.15}
+  .step[aria-selected="true"]{border-top-color:var(--brand);background:var(--brand-wash)}
+  .step[aria-selected="true"] .sn,.step[aria-selected="true"] .nm{color:var(--brand)}
+  @media(max-width:640px){.rail{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:380px){.rail{grid-template-columns:1fr}}
   .rail-detail{margin-top:20px;padding:18px 20px;background:var(--paper);border:1px solid var(--hair);border-left:3px solid var(--brand);display:flex;gap:16px;align-items:flex-start;min-height:74px}
   .rail-detail .dk{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);flex:0 0 auto;font-weight:600;padding-top:2px}
   .rail-detail .dv{font-size:15.5px}
@@ -484,14 +479,14 @@
     <h2>El selector de estado</h2>
     <p class="lead" style="margin:22px 0 30px">El campo <span class="mono">call_flows.flow_step</span> (entero) es un <b>selector por categoría de cliente</b>: según su valor, el Switch carga un prompt distinto. Los números 1–6 son los valores guardados en la base, no un orden de pasos: que Comercial Compra sea el 6 no lo hace "el último", es solo la etiqueta que recibió esa categoría. Selecciona una para ver su prompt.</p>
     <div class="rail-frame">
-      <div class="rail-head"><span class="t">flow_step · selector por categoría</span><span class="s">6 valores</span></div>
-      <div class="rail" id="rail" role="tablist" aria-label="Estados del flow_step">
-        <button class="step" role="tab" aria-selected="true" data-prompt="Recepción del primer contacto: identifica al cliente y abre el registro." data-name="Nuevo Cliente"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">01</span><span class="nm">Nuevo Cliente</span></span></button>
-        <button class="step" role="tab" aria-selected="false" data-prompt="Atiende interés en inmuebles: vivienda y propiedades disponibles." data-name="Inmuebles"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">02</span><span class="nm">Inmuebles</span></span></button>
-        <button class="step" role="tab" aria-selected="false" data-prompt="Ruta de renta comercial: naves y espacios en arrendamiento." data-name="Comercial Renta"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">03</span><span class="nm">Comercial Renta</span></span></button>
-        <button class="step" role="tab" aria-selected="false" data-prompt="Perfil industrial: edificios y build-to-suit para manufactura." data-name="Industrial"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">04</span><span class="nm">Industrial</span></span></button>
-        <button class="step" role="tab" aria-selected="false" data-prompt="Cliente ya registrado: retoma su historial y continúa el embudo." data-name="Cliente Existente"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">05</span><span class="nm">Cliente Existente</span></span></button>
-        <button class="step" role="tab" aria-selected="false" data-prompt="Ruta de compra comercial: adquisición de propiedad comercial." data-name="Comercial Compra"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">06</span><span class="nm">Comercial Compra</span></span></button>
+      <div class="rail-head"><span class="t">flow_step · selector por categoría</span><span class="s">6 valores, sin orden</span></div>
+      <div class="rail" id="rail" role="tablist" aria-label="Categorías de flow_step">
+        <button class="step" role="tab" aria-selected="true" data-prompt="Recepción del primer contacto: identifica al cliente y abre el registro." data-name="Nuevo Cliente"><span class="sn">flow_step 1</span><span class="nm">Nuevo Cliente</span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Atiende interés en inmuebles: vivienda y propiedades disponibles." data-name="Inmuebles"><span class="sn">flow_step 2</span><span class="nm">Inmuebles</span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Ruta de renta comercial: naves y espacios en arrendamiento." data-name="Comercial Renta"><span class="sn">flow_step 3</span><span class="nm">Comercial Renta</span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Perfil industrial: edificios y build-to-suit para manufactura." data-name="Industrial"><span class="sn">flow_step 4</span><span class="nm">Industrial</span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Cliente ya registrado: retoma su historial y continúa el embudo." data-name="Cliente Existente"><span class="sn">flow_step 5</span><span class="nm">Cliente Existente</span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Ruta de compra comercial: adquisición de propiedad comercial." data-name="Comercial Compra"><span class="sn">flow_step 6</span><span class="nm">Comercial Compra</span></button>
       </div>
       <div class="rail-detail" id="railDetail" aria-live="polite">
         <span class="dk" id="rdName">Nuevo Cliente</span>
