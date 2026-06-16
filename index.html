@@ -4,308 +4,402 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATISA Voicebot — Ingeniería Inversa</title>
-<meta name="description" content="Teardown editorial de un voicebot de calificación de leads sobre Vapi + n8n. Cómo está armado por dentro y por qué se cae.">
+<meta name="description" content="Ingeniería inversa de un voicebot de calificación de leads sobre Vapi + n8n. Cómo está armado por dentro y por qué se cae.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#F7F6F2;
-    --panel:#EFEDE7;
-    --ink:#1A1C20;
-    --ink-soft:#4A4E57;
-    --hair:#DCD9D0;
+    --paper:#FFFFFF;
+    --panel:#EEF0F4;
+    --panel-2:#F5F6F9;
+    --ink:#14151A;
+    --ink-soft:#5A5E66;
+    --hair:#E2E4EA;
+    --brand:#D2262C;
+    --brand-dk:#A01D22;
+    --brand-wash:#FBECEC;
     --slate:#2E4A5A;
-    --signal:#C0531D;
-    --signal-bg:#FBEFE6;
+    --amber:#C0531D;
+    --amber-bg:#FBEFE6;
+    --ochre:#8A6A32;
     --ok:#2F6E4F;
     --serif:"Fraunces",Georgia,serif;
     --sans:"Spline Sans",system-ui,sans-serif;
     --mono:"Spline Sans Mono",ui-monospace,monospace;
-    --maxw:1080px;
+    --maxw:1120px;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:var(--sans);
-    font-size:17px;
-    line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-    text-rendering:optimizeLegibility;
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:17px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   }
-  ::selection{background:var(--slate);color:var(--paper)}
-
+  ::selection{background:var(--brand);color:#fff}
   a{color:inherit}
-  :focus-visible{outline:2px solid var(--slate);outline-offset:3px;border-radius:1px}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:1px}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 30px}
 
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  /* brand-name highlight */
+  .b{font-weight:600;color:var(--slate);letter-spacing:.005em}
 
-  /* ---------- shared type ---------- */
-  .eyebrow{
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    color:var(--slate);
-    font-weight:500;
-    margin:0 0 18px;
-  }
+  /* ---------- type ---------- */
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);font-weight:500;margin:0 0 16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:26px;height:2px;background:var(--brand);display:inline-block}
   .mono{font-family:var(--mono)}
   h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;line-height:1.08;margin:0}
-  h2{font-size:clamp(28px,4.4vw,42px);font-weight:600}
-  h3{font-size:22px;font-weight:600;letter-spacing:-.005em}
+  h2{font-size:clamp(28px,4.4vw,44px)}
+  h3{font-size:22px;letter-spacing:-.005em}
   p{margin:0 0 18px}
+  .lead{font-size:19px;color:var(--ink-soft);max-width:62ch}
 
-  .section{padding:84px 0;border-top:1px solid var(--hair)}
-  .section-num{
-    font-family:var(--mono);font-size:12px;letter-spacing:.16em;
-    color:var(--ink-soft);text-transform:uppercase;display:block;margin-bottom:10px;
-  }
-  .lead{font-size:19px;color:var(--ink-soft);max-width:60ch}
+  .section{padding:90px 0;border-top:1px solid var(--hair)}
+  .section-num{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase}
+
+  /* ---------- header ---------- */
+  header.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--hair)}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:13px 30px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .brandlock{display:flex;align-items:center;gap:13px;text-decoration:none}
+  .brandlock svg{height:24px;width:auto;display:block}
+  .brandlock .div{width:1px;height:22px;background:var(--hair)}
+  .brandlock .sub{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .nav-links{display:flex;gap:4px}
+  .nav-links a{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;padding:7px 11px;position:relative}
+  .nav-links a::after{content:"";position:absolute;left:11px;right:11px;bottom:3px;height:2px;background:var(--brand);transform:scaleX(0);transform-origin:left;transition:transform .2s ease}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a:hover::after{transform:scaleX(1)}
+  @media(max-width:780px){.nav-links{display:none}}
 
   /* ---------- hero ---------- */
-  .hero{position:relative;overflow:hidden;padding:74px 0 64px}
-  .hero .signal-wrap{position:absolute;inset:0;pointer-events:none;opacity:.9}
-  .hero-inner{position:relative;z-index:2}
-  .badge{
-    display:inline-flex;align-items:center;gap:9px;
-    font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--slate);border:1px solid var(--hair);background:var(--panel);
-    padding:7px 13px;margin-bottom:26px;
-  }
-  .badge .dot{width:7px;height:7px;background:var(--signal);border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
-  h1.title{
-    font-size:clamp(40px,8vw,82px);font-weight:600;line-height:.98;letter-spacing:-.02em;
-    margin-bottom:24px;max-width:16ch;
-  }
-  h1.title em{font-style:italic;font-weight:500;color:var(--slate)}
-  .thesis{font-size:clamp(18px,2.4vw,22px);color:var(--ink-soft);max-width:54ch;margin-bottom:38px;line-height:1.5}
+  .hero{padding:72px 0 18px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:54px;align-items:center}
+  .badge{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);border:1px solid #ecc9ca;background:var(--brand-wash);padding:7px 13px;margin-bottom:26px}
+  .badge .dot{width:7px;height:7px;background:var(--brand);border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
+  h1.title{font-size:clamp(38px,6.4vw,72px);font-weight:600;line-height:.99;letter-spacing:-.02em;margin-bottom:22px;max-width:14ch}
+  h1.title em{font-style:italic;font-weight:500;color:var(--brand)}
+  .thesis{font-size:clamp(17px,2.2vw,21px);color:var(--ink-soft);max-width:48ch;margin-bottom:0;line-height:1.5}
   .thesis b{color:var(--ink);font-weight:600}
-  .stats{
-    display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--hair);background:var(--panel);
-    font-family:var(--mono);
-  }
-  .stat{flex:1 1 0;min-width:120px;padding:18px 20px;border-right:1px solid var(--hair)}
+  .stats{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--hair);margin-top:38px}
+  .stat{flex:1 1 0;min-width:104px;padding:18px 20px;border-right:1px solid var(--hair)}
   .stat:last-child{border-right:none}
-  .stat .n{font-family:var(--serif);font-size:34px;font-weight:600;line-height:1;display:block;letter-spacing:-.01em}
-  .stat .l{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px;display:block}
+  .stat .n{font-family:var(--serif);font-size:34px;font-weight:600;line-height:1;display:block;letter-spacing:-.01em;color:var(--brand)}
+  .stat .l{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px;display:block}
+
+  /* oscilloscope card */
+  .scope{border:1px solid var(--hair);background:var(--panel-2);padding:0;position:relative;overflow:hidden}
+  .scope .scope-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--hair);font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
+  .scope .scope-head .live{display:flex;align-items:center;gap:7px;color:var(--brand)}
+  .scope .scope-head .live .d{width:7px;height:7px;border-radius:50%;background:var(--brand);animation:pulse 2.4s ease-in-out infinite}
+  .scope svg{display:block;width:100%;height:auto}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:34px}.scope{order:2}}
+
+  /* ---------- logos strip ---------- */
+  .strip{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);background:var(--panel-2)}
+  .strip-in{max-width:var(--maxw);margin:0 auto;padding:22px 30px;display:flex;align-items:center;gap:14px 34px;flex-wrap:wrap;justify-content:center}
+  .strip .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-right:6px}
+  .logo{display:inline-flex;align-items:center;gap:9px;opacity:.85;transition:opacity .2s ease,transform .2s ease;filter:saturate(.95)}
+  .logo:hover{opacity:1;transform:translateY(-1px)}
+  .logo svg{height:22px;width:auto;display:block}
+  .logo span{font-family:var(--sans);font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
 
   /* ---------- reveals ---------- */
-  .reveals{display:grid;gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:14px}
-  .reveal{background:var(--paper);padding:22px 24px}
-  .reveal .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:8px}
+  .reveals{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:16px}
+  .reveal{background:var(--paper);padding:24px 26px}
+  .reveal .k{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--brand);display:block;margin-bottom:9px;font-weight:500}
   .reveal p{margin:0;font-size:16px}
-  .reveal b{color:var(--ink)}
+  @media(max-width:680px){.reveals{grid-template-columns:1fr}}
 
   /* ---------- stack grid ---------- */
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
-  .cell{background:var(--paper);padding:24px}
-  .cell .role{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin-bottom:9px}
+  .cell{background:var(--paper);padding:24px;transition:background .18s ease}
+  .cell:hover{background:var(--panel-2)}
+  .cell .ctop{display:flex;align-items:center;gap:11px;margin-bottom:14px;min-height:24px}
+  .cell .ctop svg{height:22px;width:auto}
+  .cell .role{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
   .cell .svc{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:6px}
   .cell .desc{font-size:14.5px;color:var(--ink-soft);margin:0}
-  .countbar{display:flex;flex-wrap:wrap;gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:1px}
+  .countbar{display:flex;flex-wrap:wrap;gap:1px;background:var(--hair);border:1px solid var(--hair);border-top:none}
   .count{flex:1 1 0;min-width:140px;background:var(--panel);padding:16px 20px;font-family:var(--mono)}
-  .count .cn{font-family:var(--serif);font-size:26px;font-weight:600}
+  .count .cn{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--brand)}
   .count .cl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:4px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
 
-  /* ---------- rail (signature) ---------- */
-  .rail-frame{border:1px solid var(--hair);background:var(--panel);padding:30px 26px 26px;margin-top:8px}
-  .rail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px;gap:14px;flex-wrap:wrap}
-  .rail-head .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate)}
+  /* ---------- FLOW MAP ---------- */
+  .flowmap-frame{border:1px solid var(--hair);background:var(--panel-2);padding:10px;margin-top:8px}
+  .flowlegend{display:flex;flex-wrap:wrap;gap:18px;padding:12px 14px 16px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .flowlegend i{display:inline-flex;align-items:center;gap:7px}
+  .flowlegend .ln{width:22px;height:0;border-top:2px solid var(--brand)}
+  .flowlegend .ln.w{border-top:2px dashed #9aa0ac}
+  .flowlegend .ln.a{border-top:2px solid var(--slate)}
+  .flowlegend .sq{width:11px;height:11px;background:var(--brand);border-radius:50%}
+  .flowmap{position:relative;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(96px,auto);gap:30px 22px;padding:24px 18px}
+  .edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
+  .edge{fill:none;stroke:var(--brand);stroke-width:2;opacity:.55;transition:opacity .2s ease,stroke-width .2s ease}
+  .edge.w{stroke:#9aa0ac;stroke-dasharray:5 5;opacity:.6}
+  .edge.a{stroke:var(--slate);opacity:.5}
+  .flowmap.focusing .edge{opacity:.08}
+  .flowmap.focusing .edge.hot{opacity:1;stroke-width:3}
+  .fmnode{position:relative;z-index:2;background:var(--paper);border:1px solid var(--hair);border-top:3px solid var(--slate);padding:13px 14px;display:flex;flex-direction:column;gap:5px;cursor:default;transition:opacity .2s ease,box-shadow .2s ease,transform .2s ease;text-align:left;font:inherit;color:inherit;align-items:flex-start}
+  button.fmnode{width:100%}
+  .fmnode:hover,.fmnode:focus-visible{box-shadow:0 6px 22px rgba(20,21,26,.10);transform:translateY(-2px)}
+  .flowmap.focusing .fmnode{opacity:.32}
+  .flowmap.focusing .fmnode.hot{opacity:1}
+  .fmnode.brandtop{border-top-color:var(--brand)}
+  .fmnode.statetop{border-top-color:var(--ok)}
+  .fmnode .ic{display:flex;align-items:center;gap:8px}
+  .fmnode .ic svg{height:17px;width:auto}
+  .fmnode .nm{font-family:var(--sans);font-weight:600;font-size:15px;line-height:1.15}
+  .fmnode .sl{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-soft);line-height:1.35}
+  .fmnode .fl{display:inline-flex;align-items:center;gap:6px;margin-top:3px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--amber);background:var(--amber-bg);border:1px solid #f0d6c2;padding:3px 7px}
+  .fmnode .fl::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2.4s ease-in-out infinite}
+  /* desktop placement */
+  .fm-tel{grid-column:1;grid-row:1}
+  .fm-vapi{grid-column:2;grid-row:1}
+  .fm-cc{grid-column:3;grid-row:1}
+  .fm-zoho{grid-column:5;grid-row:1}
+  .fm-twilio{grid-column:6;grid-row:1}
+  .fm-sb{grid-column:3;grid-row:2}
+  .fm-sw{grid-column:4;grid-row:2}
+  .fm-conv{grid-column:3;grid-row:3}
+  .fm-b2b{grid-column:2;grid-row:4}
+  .fm-sched{grid-column:3;grid-row:4}
+  .fm-eoc{grid-column:4;grid-row:4}
+  .fm-phase{grid-column:1;grid-row:3;align-self:center}
+  .fm-phase .pz{font-family:var(--serif);font-style:italic;font-size:19px;color:var(--ink-soft);line-height:1.2}
+  .fm-phase .pz small{display:block;font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:4px}
+  @media(max-width:820px){
+    .flowmap{grid-template-columns:1fr;gap:18px;padding:18px 8px}
+    .fmnode,.fm-phase{grid-column:1!important;grid-row:auto!important}
+    .edges{display:none}
+    .fmnode{border-left:3px solid var(--slate);border-top:1px solid var(--hair)}
+    .fmnode.brandtop{border-left-color:var(--brand)}
+    .fmnode.statetop{border-left-color:var(--ok)}
+    .fm-phase{display:none}
+  }
+
+  /* ---------- rail (signature, interactive) ---------- */
+  .rail-frame{border:1px solid var(--hair);background:var(--panel-2);padding:28px 24px 22px;margin-top:8px}
+  .rail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px;gap:14px;flex-wrap:wrap}
+  .rail-head .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
   .rail-head .s{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-  .rail{display:flex;align-items:stretch;gap:0;position:relative;overflow-x:auto;padding-bottom:6px}
-  .node{flex:1 1 0;min-width:140px;position:relative;padding:0 2px}
-  .node .top{display:flex;align-items:center;gap:0}
-  .node .tick{width:13px;height:13px;border-radius:50%;background:var(--paper);border:2px solid var(--slate);flex:0 0 auto;z-index:2}
-  .node .line{height:2px;background:var(--slate);flex:1 1 auto;opacity:.45}
-  .node:last-child .line{display:none}
-  .node .body{padding:14px 14px 6px 0}
-  .node .step{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--slate);font-weight:600}
-  .node .name{font-family:var(--serif);font-size:17px;font-weight:600;margin-top:5px;line-height:1.18}
-  .rail-note{
-    display:flex;gap:10px;align-items:flex-start;margin-top:22px;padding:14px 16px;
-    background:var(--paper);border:1px solid var(--hair);font-size:14.5px;color:var(--ink-soft);
-  }
-  .rail-note .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);flex:0 0 auto;font-weight:600}
+  .rail{display:flex;gap:0;overflow-x:auto;padding-bottom:6px}
+  .step{flex:1 1 0;min-width:128px;position:relative;background:transparent;border:none;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0 4px 0 0}
+  .step .top{display:flex;align-items:center}
+  .step .tick{width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--slate);flex:0 0 auto;z-index:2;transition:background .2s,border-color .2s,transform .2s}
+  .step .line{height:2px;background:var(--slate);opacity:.4;flex:1 1 auto}
+  .step:last-child .line{display:none}
+  .step .body{padding:13px 12px 6px 0}
+  .step .sn{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--slate);font-weight:600}
+  .step .nm{font-family:var(--serif);font-size:17px;font-weight:600;margin-top:5px;line-height:1.18}
+  .step[aria-selected="true"] .tick{background:var(--brand);border-color:var(--brand);transform:scale(1.15)}
+  .step[aria-selected="true"] .sn{color:var(--brand)}
+  .step:hover .tick{border-color:var(--brand)}
+  .rail-detail{margin-top:20px;padding:18px 20px;background:var(--paper);border:1px solid var(--hair);border-left:3px solid var(--brand);display:flex;gap:16px;align-items:flex-start;min-height:74px}
+  .rail-detail .dk{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);flex:0 0 auto;font-weight:600;padding-top:2px}
+  .rail-detail .dv{font-size:15.5px}
+  .rail-detail .dv b{font-weight:600}
+  .rail-note{display:flex;gap:10px;align-items:flex-start;margin-top:18px;font-size:14.5px;color:var(--ink-soft)}
+  .rail-note .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);flex:0 0 auto;font-weight:600;padding-top:2px}
 
-  /* ---------- flow cards ---------- */
-  .flows{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair)}
-  .flow{background:var(--paper);padding:30px 28px;display:flex;flex-direction:column}
-  .flow .fhead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px}
-  .flow .ftitle{font-family:var(--serif);font-size:24px;font-weight:600}
-  .flow .ftag{font-size:13px;color:var(--ink-soft);margin:2px 0 18px}
-  .pill{
-    display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
-    letter-spacing:.08em;text-transform:uppercase;color:var(--slate);
-    border:1px solid var(--hair);background:var(--panel);padding:6px 11px;white-space:nowrap;
-  }
-  .pill .pk{color:var(--ink-soft)}
-  .pill .pv{color:var(--ink);font-weight:500;text-transform:none;letter-spacing:0}
-  .flow .what{font-size:15px;color:var(--ink-soft);margin:0 0 20px}
-  .flow .what b{color:var(--ink);font-weight:600}
-  .flags{margin-top:auto;display:flex;flex-direction:column;gap:8px}
-  .flag{
-    background:var(--signal-bg);border:1px solid #f0d6c2;border-left:3px solid var(--signal);
-    padding:11px 13px 11px 14px;display:flex;gap:10px;align-items:flex-start;
-  }
-  .flag .bdot{width:8px;height:8px;border-radius:50%;background:var(--signal);flex:0 0 auto;margin-top:6px;animation:pulse 2.4s ease-in-out infinite}
+  /* ---------- tabs (4 flujos) ---------- */
+  .tabs{display:flex;gap:0;border:1px solid var(--hair);border-bottom:none;flex-wrap:wrap;margin-top:8px}
+  .tab{flex:1 1 0;min-width:150px;background:var(--panel-2);border:none;border-right:1px solid var(--hair);border-bottom:3px solid transparent;font:inherit;cursor:pointer;padding:16px 18px;text-align:left;transition:background .18s}
+  .tab:last-child{border-right:none}
+  .tab .tn{font-family:var(--serif);font-size:18px;font-weight:600;display:block;line-height:1.1}
+  .tab .tt{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-top:5px;display:block}
+  .tab:hover{background:#fff}
+  .tab[aria-selected="true"]{background:#fff;border-bottom-color:var(--brand)}
+  .tab[aria-selected="true"] .tn{color:var(--brand)}
+  .panel{border:1px solid var(--hair);padding:30px 28px;display:none}
+  .panel.active{display:block;animation:fade .3s ease}
+  .panel .pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border:1px solid #ecc9ca;background:var(--brand-wash);padding:6px 11px;margin-bottom:18px}
+  .panel .pill .pv{color:var(--ink);font-weight:500;text-transform:none;letter-spacing:0}
+  .panel .what{font-size:16px;color:var(--ink-soft);margin:0 0 22px;max-width:74ch}
+  .panel .what b{color:var(--ink);font-weight:600}
+  .flags{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .flag{background:var(--amber-bg);border:1px solid #f0d6c2;border-left:3px solid var(--amber);padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+  .flag .bdot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:0 0 auto;margin-top:6px;animation:pulse 2.4s ease-in-out infinite}
   .flag .ftxt{font-size:14px;color:#7a3914;line-height:1.45}
-  .flag .ftxt b{color:var(--signal)}
+  .flag .ftxt b{color:var(--amber)}
+  @media(max-width:620px){.flags{grid-template-columns:1fr}.tab{min-width:50%}}
 
   /* ---------- diagnosis ---------- */
   .diag{display:flex;flex-direction:column;gap:1px;background:var(--hair);border:1px solid var(--hair)}
-  .issue{background:var(--signal-bg);padding:24px 26px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start}
-  .issue .left{display:flex;flex-direction:column;gap:12px;align-items:flex-start;min-width:86px}
-  .issue .code{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--signal);display:flex;align-items:center;gap:8px}
-  .issue .code .bdot{width:9px;height:9px;border-radius:50%;background:var(--signal);animation:pulse 2.4s ease-in-out infinite}
+  .issue{background:var(--paper);padding:24px 26px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start;transition:background .18s,transform .18s}
+  .issue:hover{background:var(--panel-2)}
+  .issue .left{display:flex;flex-direction:column;gap:11px;align-items:flex-start;min-width:92px}
+  .issue .code{font-family:var(--mono);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .issue .code .bdot{width:9px;height:9px;border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
   .sev{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:4px 9px;border:1px solid currentColor}
-  .sev.critico{color:#9a2b07;background:#fbe2d4}
-  .sev.alto{color:var(--signal)}
-  .sev.medio{color:#8a6a32;border-color:#c9a96a}
-  .issue h3{font-size:19px;margin-bottom:8px;color:#5e2c10}
-  .issue p{margin:0;font-size:15px;color:#7a3914}
+  .crit{color:var(--brand)} .crit .bdot{background:var(--brand)}
+  .hi{color:var(--amber)} .hi .bdot{background:var(--amber)}
+  .me{color:var(--ochre)} .me .bdot{background:var(--ochre)}
+  .issue h3{font-size:19px;margin-bottom:8px}
+  .issue p{margin:0;font-size:15px;color:var(--ink-soft)}
   .issue .fix{margin-top:10px;font-size:14px;color:var(--ok);font-family:var(--mono)}
   .issue .fix b{font-weight:600}
 
-  /* ---------- trigger table ---------- */
+  /* ---------- table ---------- */
   .tbl{width:100%;border-collapse:collapse;border:1px solid var(--hair);font-size:15px;background:var(--paper)}
   .tbl th,.tbl td{text-align:left;padding:15px 18px;border-bottom:1px solid var(--hair);vertical-align:top}
-  .tbl th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);font-weight:500;background:var(--panel)}
+  .tbl th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);font-weight:500;background:var(--panel)}
   .tbl tr:last-child td{border-bottom:none}
+  .tbl tr:hover td{background:var(--panel-2)}
   .tbl td.wf{font-weight:600;font-family:var(--serif);font-size:17px}
   .tbl td.hook{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
 
-  /* ---------- recommendations ---------- */
+  /* ---------- recos ---------- */
   .recos{display:flex;flex-direction:column;gap:1px;background:var(--hair);border:1px solid var(--hair)}
-  .reco{background:var(--paper);padding:22px 26px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:baseline;border-left:3px solid var(--ok)}
-  .reco .rn{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ok);line-height:1}
+  .reco{background:var(--paper);padding:22px 26px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:baseline;border-left:3px solid var(--ok)}
+  .reco .rn{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--brand);line-height:1}
   .reco p{margin:0;font-size:16px}
-  .reco p b{font-weight:600}
   .reco .impact{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ok);margin-left:6px}
 
   /* ---------- closing ---------- */
-  .closing{background:var(--slate);color:var(--paper);border-top:none}
-  .closing .eyebrow{color:#a9c3d3}
-  .closing h2{color:var(--paper)}
-  .closing p{color:#d3dee5;max-width:62ch}
-  .closing .callout{
-    border:1px solid #46606f;background:#284251;padding:26px 28px;margin-top:8px;
-    display:flex;gap:16px;align-items:flex-start;
-  }
-  .closing .callout .mk{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a9c3d3;flex:0 0 auto;font-weight:600}
-  .closing .callout p{margin:0;color:#e6edf1;font-size:16px}
-  .closing .callout b{color:#fff}
+  .closing{background:var(--ink);color:#fff;border-top:none}
+  .closing .eyebrow{color:#ff9b9e}
+  .closing .eyebrow::before{background:var(--brand)}
+  .closing h2{color:#fff}
+  .closing p{color:#c7cad1;max-width:64ch}
+  .callout{border:1px solid #34363d;background:#1f2025;padding:26px 28px;margin-top:10px;display:flex;gap:18px;align-items:flex-start}
+  .callout .mk{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#ff9b9e;flex:0 0 auto;font-weight:600;padding-top:2px}
+  .callout p{margin:0;color:#e7e8ec;font-size:16px}
+  .callout b{color:#fff}
   .dl{margin-top:34px}
-  .dl a{
-    display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--paper);text-decoration:none;
-    border:1px solid #6a8494;padding:12px 18px;transition:background .18s ease,border-color .18s ease;
-  }
-  .dl a:hover{background:#284251;border-color:#a9c3d3}
-  .dl a .arr{font-size:14px}
+  .dl a{display:inline-flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#fff;text-decoration:none;border:1px solid #4a4c54;padding:13px 19px;transition:background .18s,border-color .18s}
+  .dl a:hover{background:var(--brand);border-color:var(--brand)}
 
-  footer{padding:34px 0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);border-top:1px solid var(--hair)}
+  footer{padding:30px 0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);border-top:1px solid var(--hair);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+  /* ---------- reveal on scroll ---------- */
+  .rv{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.6,.2,1),transform .7s cubic-bezier(.2,.6,.2,1)}
+  .rv.in{opacity:1;transform:none}
 
   /* ---------- animations ---------- */
-  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.65);opacity:.45}}
-  .draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 2.6s cubic-bezier(.65,0,.35,1) forwards}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.4}}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .draw{stroke-dasharray:var(--len,1400);stroke-dashoffset:var(--len,1400);animation:draw 2.6s cubic-bezier(.65,0,.35,1) .2s forwards}
   @keyframes draw{to{stroke-dashoffset:0}}
 
-  /* ---------- responsive ---------- */
-  @media(max-width:860px){
-    .grid{grid-template-columns:1fr 1fr}
-    .flows{grid-template-columns:1fr}
-  }
   @media(max-width:620px){
     body{font-size:16px}
-    .section{padding:60px 0}
-    .grid{grid-template-columns:1fr}
-    .stat{flex:1 1 50%;border-bottom:1px solid var(--hair)}
+    .section{padding:62px 0}
     .issue,.reco{grid-template-columns:1fr;gap:12px}
     .issue .left{flex-direction:row;align-items:center}
-    .reco .rn{font-size:24px}
   }
-
   @media(prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
-    *{animation:none!important}
+    *{animation:none!important;transition:none!important}
     .draw{stroke-dashoffset:0!important}
+    .rv{opacity:1;transform:none}
   }
 </style>
 </head>
 <body>
 
-<!-- ===================== HERO ===================== -->
-<header class="hero">
-  <div class="signal-wrap" aria-hidden="true">
-    <svg width="100%" height="100%" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" fill="none">
-      <path id="sig" class="draw" style="--len:2400"
-        d="M-20,360 L180,360 L210,360 L226,300 L242,418 L260,250 L278,360 L520,360 L548,360 L566,210 L584,470 L602,330 L620,360 L860,360 L884,360 L900,290 L918,430 L936,360 L1220,360"
-        stroke="#2E4A5A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
-    </svg>
-  </div>
-  <div class="wrap hero-inner">
-    <span class="badge"><span class="dot"></span>Teardown técnico · ATISA</span>
-    <h1 class="title">ATISA Voicebot<br><em>Ingeniería Inversa</em></h1>
-    <p class="thesis">Un voicebot de calificación de leads sobre <b>Vapi + n8n</b>. Así está armado por dentro, y por qué se cae.</p>
-    <div class="stats" role="list">
-      <div class="stat" role="listitem"><span class="n">239</span><span class="l">Nodos</span></div>
-      <div class="stat" role="listitem"><span class="n">4</span><span class="l">Workflows</span></div>
-      <div class="stat" role="listitem"><span class="n">6</span><span class="l">Estados</span></div>
-      <div class="stat" role="listitem"><span class="n">7</span><span class="l">Servicios externos</span></div>
-    </div>
+<!-- ===== HEADER ===== -->
+<header class="nav">
+  <div class="nav-in">
+    <a class="brandlock" href="#top" aria-label="ATISA — inicio">
+      <!-- ATISA logo (real, vectorizado del sitio) -->
+      <svg viewBox="0 0 501.33334 133.33333" role="img" aria-label="ATISA"><g transform="matrix(1.3333333,0,0,-1.3333333,0,133.33333)"><path style="fill:#000" d="M 42.333,74.448 H 56.981 V 59.672 H 42.333 Z"/><g transform="translate(42.0139,99.9998)"><path style="fill:#d2262c" d="m 0,0 v -23.055 c -14.148,-4.182 -22.353,-19.483 -18.329,-34.174 4.027,-14.694 18.763,-23.215 32.912,-19.033 14.15,4.184 22.356,19.48 18.326,34.178 -2.481,9.067 -9.244,16.196 -17.938,18.91 L 14.94,-0.048 c 20.794,-3.45 37.062,-20.453 40.241,-42.069 4.036,-27.452 -14.123,-53.107 -40.561,-57.299 -26.437,-4.193 -51.142,14.664 -55.179,42.12 C -44.596,-29.842 -26.439,-4.189 0,0"/></g><g transform="translate(130.7464,87.178)"><path style="fill:#000" d="M 0,0 H 18.989 L 40.577,-52.417 H 22.175 l -2.822,8.397 H -0.678 l -2.862,-8.354 h -18.007 z m 9.385,-14.352 -6.412,-18.14 h 12.433 z"/></g><g transform="translate(161.2625,87.0686)"><path style="fill:#000" d="M 0,0 H 62.237 V -15.981 H 38.449 V -52.393 H 23.34 v 36.24 H 0 Z"/></g><path style="fill:#000" d="m 229.02,86.915 h 15.522 V 34.853 H 229.02 Z"/><g transform="translate(311.5754,87.0969)"><path style="fill:#000" d="m 0,0 v -11.654 h -46.862 v -8.817 h 32.171 c 6.44,0 12.266,-3.959 14.843,-10.088 V -41.258 C -1.72,-47.563 -7.187,-51.984 -13.531,-52.314 H -62.046 V -40.6 h 46.461 v 8.288 h -33.733 c -5.976,0.997 -10.938,5.335 -12.905,11.28 v 10.367 c 2.262,5.911 7.508,10.021 13.603,10.665 z"/></g><g transform="translate(337.5002,54.6863)"><path style="fill:#000" d="M 0,0 6.415,18.14 12.43,0 Z M 16.016,32.492 H -2.969 l -21.554,-52.374 h 18.011 l 2.862,8.354 h 20.034 l 2.819,-8.397 h 18.403 z"/></g></g></svg>
+      <span class="div" aria-hidden="true"></span>
+      <span class="sub">Ingeniería inversa</span>
+    </a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#sistema">Sistema</a>
+      <a href="#stack">Stack</a>
+      <a href="#recorrido">Recorrido</a>
+      <a href="#flujos">Flujos</a>
+      <a href="#diagnostico">Diagnóstico</a>
+      <a href="#recos">Recos</a>
+    </nav>
   </div>
 </header>
 
-<!-- ===================== 1. SISTEMA EN UNA FRASE ===================== -->
-<section class="section">
+<a id="top"></a>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
   <div class="wrap">
-    <span class="section-num">01 — Panorama</span>
-    <h2>El sistema en una frase</h2>
-    <p class="lead" style="margin-top:22px">
-      Voicebot de calificación de leads inmobiliarios y comerciales para ATISA. <b style="color:var(--ink);font-weight:600">Vapi.ai</b> maneja la voz; <b style="color:var(--ink);font-weight:600">n8n</b> maneja toda la lógica. Atiende la llamada, identifica al cliente en Supabase, lo enruta a un "agente especializado" según su etapa (<span class="mono">flow_step</span>), extrae datos de la conversación con IA y los sincroniza con Zoho CRM. Si hace falta, transfiere a un humano vía Twilio.
-    </p>
-    <p class="eyebrow" style="margin:38px 0 0">Revelaciones clave</p>
-    <div class="reveals">
-      <div class="reveal">
-        <span class="k">No es una sola plataforma</span>
-        <p>Hay <b>2 cuentas de Twilio</b> (ATISA/"TendencIA" y "American Phone") y un endpoint propio en <span class="mono">api.tendencia.ai</span>. El proveedor M Consulting es <b>TendencIA</b>.</p>
+    <div class="hero-grid">
+      <div>
+        <span class="badge"><span class="dot"></span>Ingeniería inversa · ATISA</span>
+        <h1 class="title">ATISA Voicebot<br><em>por dentro</em></h1>
+        <p class="thesis">Un voicebot de calificación de leads sobre <span class="b">Vapi</span> + <span class="b">n8n</span>. Así está armado por dentro, y por qué se cae.</p>
+        <div class="stats" role="list">
+          <div class="stat" role="listitem"><span class="n" data-count="239">0</span><span class="l">Nodos</span></div>
+          <div class="stat" role="listitem"><span class="n" data-count="4">0</span><span class="l">Workflows</span></div>
+          <div class="stat" role="listitem"><span class="n" data-count="6">0</span><span class="l">Estados</span></div>
+          <div class="stat" role="listitem"><span class="n" data-count="7">0</span><span class="l">Servicios</span></div>
+        </div>
       </div>
-      <div class="reveal">
-        <span class="k">Los "agentes Navi" NO son IA</span>
-        <p>Son <b>prompts de texto</b> guardados en nodos Set que n8n le devuelve a Vapi. Vapi corre la conversación; n8n solo le pasa el prompt y las tools.</p>
-      </div>
-      <div class="reveal">
-        <span class="k">La IA real corre después</span>
-        <p>Los modelos de lenguaje solo corren <b>DESPUÉS de la llamada</b>, para extraer variables y resumir.</p>
-      </div>
-      <div class="reveal">
-        <span class="k">Mezcla de modelos sin criterio</span>
-        <p>Gemini 2.5 Flash, GPT-4.1, GPT-4o, o4-mini y Claude 3.7 Sonnet. Notas de los devs: <b>"Probar con Gemini"</b>, <b>"Probar con GPT 4.1 o o4 mini"</b>, <b>"REVISAR TIEMPO"</b>. Se entregó experimental.</p>
+      <div class="scope" aria-hidden="true">
+        <div class="scope-head"><span>Señal · estabilidad</span><span class="live"><span class="d"></span>Inestable</span></div>
+        <svg viewBox="0 0 440 240" fill="none">
+          <g stroke="#E2E4EA" stroke-width="1">
+            <line x1="0" y1="60" x2="440" y2="60"/><line x1="0" y1="120" x2="440" y2="120"/><line x1="0" y1="180" x2="440" y2="180"/>
+            <line x1="110" y1="0" x2="110" y2="240"/><line x1="220" y1="0" x2="220" y2="240"/><line x1="330" y1="0" x2="330" y2="240"/>
+          </g>
+          <path class="draw" style="--len:1180" d="M0,120 L70,120 L86,120 L98,72 L110,168 L124,108 L150,120 L210,120 L226,120 L240,46 L256,196 L270,120 L300,120 L318,120 L330,90 L344,150 L356,120 L440,120"
+            stroke="#D2262C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===================== 2. STACK REAL ===================== -->
-<section class="section">
-  <div class="wrap">
-    <span class="section-num">02 — Stack</span>
-    <h2>Stack real</h2>
-    <p class="lead" style="margin:22px 0 34px">Siete servicios externos, cuatro workflows de n8n, una base de estado compartida.</p>
-    <div class="grid">
-      <div class="cell"><div class="role">Voz</div><div class="svc">Vapi.ai</div><p class="desc">Eventos assistant-request y end-of-call-report.</p></div>
-      <div class="cell"><div class="role">Orquestación</div><div class="svc">n8n</div><p class="desc">4 workflows, 239 nodos. Toda la lógica vive aquí.</p></div>
-      <div class="cell"><div class="role">Base de datos</div><div class="svc">Supabase</div><p class="desc">users, call_flows, user_property_interests, zoho_updates, call_logs, properties.</p></div>
-      <div class="cell"><div class="role">CRM</div><div class="svc">Zoho</div><p class="desc">30 llamadas HTTP, versiones v2 / v2.1 / v7 / v8 mezcladas.</p></div>
-      <div class="cell"><div class="role">Telefonía</div><div class="svc">Twilio</div><p class="desc">2 cuentas: México (MN) y EE.UU. (USN).</p></div>
-      <div class="cell"><div class="role">IA post-llamada</div><div class="svc">OpenRouter + OpenAI</div><p class="desc">Extracción de variables y resúmenes tras colgar.</p></div>
-      <div class="cell"><div class="role">Endpoint propio</div><div class="svc">api.tendencia.ai</div><p class="desc"><span class="mono">/webhooks/vapi</span> — infraestructura del proveedor.</p></div>
+<!-- ===== LOGOS STRIP ===== -->
+<div class="strip">
+  <div class="strip-in">
+    <span class="lbl">Construido sobre</span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v10l-6 4M12 12l6 4M12 12 6 8" stroke="#12A594" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="2.5" r="1.6" fill="#12A594"/><circle cx="6" cy="16" r="1.6" fill="#12A594"/><circle cx="18" cy="16" r="1.6" fill="#12A594"/></svg><span>Vapi</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><circle cx="4" cy="12" r="2.4" fill="#EA4B71"/><circle cx="12" cy="7" r="2.4" fill="#EA4B71"/><circle cx="12" cy="17" r="2.4" fill="#EA4B71"/><circle cx="20" cy="12" r="2.4" fill="#EA4B71"/><path d="M6 11 10 8M6 13l4 3M14 7.5 18 11M14 16.5 18 13" stroke="#EA4B71" stroke-width="1.6"/></svg><span>n8n</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z" fill="#3ECF8E"/></svg><span>Supabase</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="7" r="2.4" fill="#E42527"/><circle cx="12" cy="7" r="2.4" fill="#F9B21D"/><circle cx="19" cy="7" r="2.4" fill="#226DB4"/><circle cx="12" cy="16" r="2.4" fill="#089949"/></svg><span>Zoho</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F22F46"/><circle cx="9" cy="9" r="2" fill="#fff"/><circle cx="15" cy="9" r="2" fill="#fff"/><circle cx="9" cy="15" r="2" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#fff"/></svg><span>Twilio</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 1 3.8 2.7 4 4 0 0 1 1.9 6.8 4 4 0 0 1-1.9 6.8A4 4 0 0 1 8.2 18.3 4 4 0 0 1 6.3 11.5 4 4 0 0 1 8.2 4.7 4 4 0 0 1 12 3Z" stroke="#0B0B0B" stroke-width="1.6"/><circle cx="12" cy="12" r="2.4" stroke="#0B0B0B" stroke-width="1.6"/></svg><span>OpenAI</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2c.6 5 2.9 7.4 8 8-5.1.6-7.4 3-8 8-.6-5-2.9-7.4-8-8 5.1-.6 7.4-3 8-8Z" fill="#3186FF"/></svg><span>Gemini</span></span>
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none"><g stroke="#D97757" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></g></svg><span>Claude</span></span>
+  </div>
+</div>
+
+<!-- ===== 01 SISTEMA ===== -->
+<section class="section" id="sistema">
+  <div class="wrap rv">
+    <span class="eyebrow">01 — Panorama</span>
+    <h2>El sistema en una frase</h2>
+    <p class="lead" style="margin-top:22px">
+      Voicebot de calificación de leads inmobiliarios y comerciales para ATISA. <span class="b">Vapi.ai</span> maneja la voz; <span class="b">n8n</span> maneja toda la lógica. Atiende la llamada, identifica al cliente en <span class="b">Supabase</span>, lo enruta a un agente especializado según su etapa (<span class="mono">flow_step</span>), extrae datos de la conversación con IA y los sincroniza con <span class="b">Zoho CRM</span>. Si hace falta, transfiere a un humano vía <span class="b">Twilio</span>.
+    </p>
+    <p class="eyebrow" style="margin:40px 0 0">Revelaciones clave</p>
+    <div class="reveals">
+      <div class="reveal"><span class="k">No es una sola plataforma</span><p>Hay <b>2 cuentas de <span class="b">Twilio</span></b> (ATISA/"TendencIA" y "American Phone") y un endpoint propio en <span class="mono">api.tendencia.ai</span>. El proveedor M Consulting es <b>TendencIA</b>.</p></div>
+      <div class="reveal"><span class="k">Los "agentes Navi" NO son IA</span><p>Son <b>prompts de texto</b> guardados en nodos Set que <span class="b">n8n</span> le devuelve a <span class="b">Vapi</span>. Vapi corre la conversación; n8n solo le pasa el prompt y las tools.</p></div>
+      <div class="reveal"><span class="k">La IA real corre después</span><p>Los modelos de lenguaje solo corren <b>DESPUÉS de la llamada</b>, para extraer variables y resumir.</p></div>
+      <div class="reveal"><span class="k">Mezcla de modelos sin criterio</span><p><span class="b">Gemini 2.5 Flash</span>, <span class="b">GPT-4.1</span>, <span class="b">GPT-4o</span>, <span class="b">o4-mini</span> y <span class="b">Claude 3.7 Sonnet</span>. Notas de los devs: "Probar con Gemini", "Probar con GPT 4.1 o o4 mini", "REVISAR TIEMPO". Se entregó experimental.</p></div>
     </div>
-    <p class="eyebrow" style="margin:34px 0 0">Conteo por workflow</p>
+  </div>
+</section>
+
+<!-- ===== 02 STACK ===== -->
+<section class="section" id="stack">
+  <div class="wrap rv">
+    <span class="eyebrow">02 — Stack</span>
+    <h2>Stack real</h2>
+    <p class="lead" style="margin:22px 0 34px">Siete servicios externos, cuatro workflows de <span class="b">n8n</span>, una base de estado compartida.</p>
+    <div class="grid">
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v10l-6 4M12 12l6 4M12 12 6 8" stroke="#12A594" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="2.5" r="1.6" fill="#12A594"/><circle cx="6" cy="16" r="1.6" fill="#12A594"/><circle cx="18" cy="16" r="1.6" fill="#12A594"/></svg><span class="role">Voz</span></div><div class="svc">Vapi.ai</div><p class="desc">Eventos assistant-request y end-of-call-report.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="4" cy="12" r="2.4" fill="#EA4B71"/><circle cx="12" cy="7" r="2.4" fill="#EA4B71"/><circle cx="12" cy="17" r="2.4" fill="#EA4B71"/><circle cx="20" cy="12" r="2.4" fill="#EA4B71"/><path d="M6 11 10 8M6 13l4 3M14 7.5 18 11M14 16.5 18 13" stroke="#EA4B71" stroke-width="1.6"/></svg><span class="role">Orquestación</span></div><div class="svc">n8n</div><p class="desc">4 workflows, 239 nodos. Toda la lógica vive aquí.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z" fill="#3ECF8E"/></svg><span class="role">Base de datos</span></div><div class="svc">Supabase</div><p class="desc">users, call_flows, user_property_interests, zoho_updates, call_logs, properties.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="7" r="2.4" fill="#E42527"/><circle cx="12" cy="7" r="2.4" fill="#F9B21D"/><circle cx="19" cy="7" r="2.4" fill="#226DB4"/><circle cx="12" cy="16" r="2.4" fill="#089949"/></svg><span class="role">CRM</span></div><div class="svc">Zoho</div><p class="desc">30 llamadas HTTP, versiones v2 / v2.1 / v7 / v8 mezcladas.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F22F46"/><circle cx="9" cy="9" r="2" fill="#fff"/><circle cx="15" cy="9" r="2" fill="#fff"/><circle cx="9" cy="15" r="2" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#fff"/></svg><span class="role">Telefonía</span></div><div class="svc">Twilio</div><p class="desc">2 cuentas: México (MN) y EE.UU. (USN).</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a4 4 0 0 1 3.8 2.7 4 4 0 0 1 1.9 6.8 4 4 0 0 1-1.9 6.8A4 4 0 0 1 8.2 18.3 4 4 0 0 1 6.3 11.5 4 4 0 0 1 8.2 4.7 4 4 0 0 1 12 3Z" stroke="#0B0B0B" stroke-width="1.6"/></svg><span class="role">IA post-llamada</span></div><div class="svc">OpenRouter + OpenAI</div><p class="desc">Extracción de variables y resúmenes tras colgar.</p></div>
+      <div class="cell"><div class="ctop"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#D2262C" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" stroke="#D2262C" stroke-width="1.5"/></svg><span class="role">Endpoint propio</span></div><div class="svc">api.tendencia.ai</div><p class="desc"><span class="mono">/webhooks/vapi</span> · infraestructura del proveedor.</p></div>
+    </div>
+    <p class="eyebrow" style="margin:36px 0 0">Nodos por workflow</p>
     <div class="countbar">
       <div class="count"><div class="cn">78</div><div class="cl">Call Control</div></div>
       <div class="count"><div class="cn">98</div><div class="cl">Agents B2B</div></div>
@@ -315,162 +409,189 @@
   </div>
 </section>
 
-<!-- ===================== 3. MODELO DE DATOS + RIEL ===================== -->
-<section class="section">
-  <div class="wrap">
-    <span class="section-num">03 — Estado</span>
-    <h2>Modelo de datos y riel de estados</h2>
-    <p class="lead" style="margin:22px 0 30px">Todo gira en torno a <span class="mono">call_flows.flow_step</span> (entero) = la etapa del embudo. Cada estado carga un prompt distinto.</p>
+<!-- ===== 03 RECORRIDO (FLOW MAP) ===== -->
+<section class="section" id="recorrido">
+  <div class="wrap rv">
+    <span class="eyebrow">03 — Recorrido</span>
+    <h2>El recorrido de una llamada</h2>
+    <p class="lead" style="margin:22px 0 18px">El proceso completo de punta a punta. Pasa el cursor (o el foco) sobre cualquier pieza para ver con qué se conecta. El estado vive en <span class="b">Supabase</span>, y casi todo lo toca.</p>
+    <div class="flowmap-frame">
+      <div class="flowlegend">
+        <i><span class="ln"></span>Durante la llamada</i>
+        <i><span class="ln w"></span>Escritura en CRM / BD</i>
+        <i><span class="ln a"></span>Después de colgar</i>
+        <i><span class="sq"></span>Estado compartido (flow_step)</i>
+      </div>
+      <div class="flowmap" id="flowmap">
+        <svg class="edges" id="edges" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <marker id="ar-r" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#D2262C"/></marker>
+            <marker id="ar-w" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa0ac"/></marker>
+            <marker id="ar-a" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2E4A5A"/></marker>
+          </defs>
+        </svg>
+
+        <button class="fmnode fm-tel" data-fm="tel" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" stroke="#2E4A5A" stroke-width="1.7" stroke-linejoin="round"/></svg></span>
+          <span class="nm">Llamada entrante</span><span class="sl">Cliente marca</span>
+        </button>
+
+        <button class="fmnode fm-vapi brandtop" data-fm="vapi" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16M7 8v8M17 8v8M3 11v2M21 11v2" stroke="#12A594" stroke-width="2" stroke-linecap="round"/></svg><b>Vapi</b></span>
+          <span class="nm">Voz</span><span class="sl">assistant-request</span>
+        </button>
+
+        <button class="fmnode fm-cc brandtop" data-fm="cc" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.2" fill="#EA4B71"/><circle cx="6" cy="18" r="2.2" fill="#EA4B71"/><circle cx="18" cy="12" r="2.2" fill="#EA4B71"/><path d="M8 6h4a3 3 0 0 1 3 3v1M8 18h4a3 3 0 0 0 3-3v-1" stroke="#EA4B71" stroke-width="1.5"/></svg></span>
+          <span class="nm">Call Control</span><span class="sl">/fd902016… · recepción</span>
+        </button>
+
+        <button class="fmnode fm-sb statetop" data-fm="sb" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z" fill="#3ECF8E"/></svg></span>
+          <span class="nm">Supabase</span><span class="sl">call_flows.flow_step · estado compartido</span>
+        </button>
+
+        <button class="fmnode fm-sw" data-fm="sw" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h10l-2-2M4 8l2 2M20 16H10l2 2M20 16l-2-2" stroke="#2E4A5A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="nm">Switch flow_step</span><span class="sl">1→6 · carga el prompt</span>
+        </button>
+
+        <button class="fmnode fm-conv brandtop" data-fm="conv" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16M7 8v8M17 8v8M3 11v2M21 11v2" stroke="#12A594" stroke-width="2" stroke-linecap="round"/></svg><b>Vapi</b></span>
+          <span class="nm">Conversación</span><span class="sl">agente Navi (prompt) + tools</span>
+        </button>
+
+        <button class="fmnode fm-b2b" data-fm="b2b" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.2" fill="#EA4B71"/><circle cx="6" cy="18" r="2.2" fill="#EA4B71"/><circle cx="18" cy="12" r="2.2" fill="#EA4B71"/><path d="M8 6h4a3 3 0 0 1 3 3v1M8 18h4a3 3 0 0 0 3-3v-1" stroke="#EA4B71" stroke-width="1.5"/></svg></span>
+          <span class="nm">Agents B2B</span><span class="sl">/9b04a605… · IA + transfiere</span>
+          <span class="fl">limit=15 frágil</span>
+        </button>
+
+        <button class="fmnode fm-sched" data-fm="sched" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.2" fill="#EA4B71"/><circle cx="6" cy="18" r="2.2" fill="#EA4B71"/><circle cx="18" cy="12" r="2.2" fill="#EA4B71"/><path d="M8 6h4a3 3 0 0 1 3 3v1M8 18h4a3 3 0 0 0 3-3v-1" stroke="#EA4B71" stroke-width="1.5"/></svg></span>
+          <span class="nm">Schedule Meeting</span><span class="sl">/447b8622… · agenda cita</span>
+        </button>
+
+        <button class="fmnode fm-eoc" data-fm="eoc" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.2" fill="#EA4B71"/><circle cx="6" cy="18" r="2.2" fill="#EA4B71"/><circle cx="18" cy="12" r="2.2" fill="#EA4B71"/><path d="M8 6h4a3 3 0 0 1 3 3v1M8 18h4a3 3 0 0 0 3-3v-1" stroke="#EA4B71" stroke-width="1.5"/></svg></span>
+          <span class="nm">End of Call</span><span class="sl">/cd37b32b… · cierre + IA</span>
+        </button>
+
+        <button class="fmnode fm-zoho" data-fm="zoho" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="7" r="2.2" fill="#E42527"/><circle cx="12" cy="7" r="2.2" fill="#F9B21D"/><circle cx="19" cy="7" r="2.2" fill="#226DB4"/><circle cx="12" cy="16" r="2.2" fill="#089949"/></svg></span>
+          <span class="nm">Zoho CRM</span><span class="sl">leads, contactos, eventos</span>
+        </button>
+
+        <button class="fmnode fm-twilio" data-fm="twilio" type="button">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#F22F46"/><circle cx="9.5" cy="9.5" r="1.7" fill="#fff"/><circle cx="14.5" cy="9.5" r="1.7" fill="#fff"/><circle cx="9.5" cy="14.5" r="1.7" fill="#fff"/><circle cx="14.5" cy="14.5" r="1.7" fill="#fff"/></svg></span>
+          <span class="nm">Twilio</span><span class="sl">transfiere a humano (MN/USN)</span>
+        </button>
+
+        <div class="fm-phase"><div class="pz"><small>Frontera</small>Durante / después de la llamada</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 04 ESTADO / RIEL ===== -->
+<section class="section" id="estado">
+  <div class="wrap rv">
+    <span class="eyebrow">04 — Estado</span>
+    <h2>El riel de estados</h2>
+    <p class="lead" style="margin:22px 0 30px">Todo gira en torno a <span class="mono">call_flows.flow_step</span> (entero) = la etapa del embudo. Selecciona un estado para ver qué prompt carga.</p>
     <div class="rail-frame">
-      <div class="rail-head">
-        <span class="t">flow_step · riel de telemetría</span>
-        <span class="s">1 → 6 · Set prompt …</span>
+      <div class="rail-head"><span class="t">flow_step · tira de telemetría</span><span class="s">1 → 6</span></div>
+      <div class="rail" id="rail" role="tablist" aria-label="Estados del flow_step">
+        <button class="step" role="tab" aria-selected="true" data-prompt="Recepción del primer contacto: identifica al cliente y abre el registro." data-name="Nuevo Cliente"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">01</span><span class="nm">Nuevo Cliente</span></span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Atiende interés en inmuebles: vivienda y propiedades disponibles." data-name="Inmuebles"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">02</span><span class="nm">Inmuebles</span></span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Ruta de renta comercial: naves y espacios en arrendamiento." data-name="Comercial Renta"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">03</span><span class="nm">Comercial Renta</span></span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Perfil industrial: edificios y build-to-suit para manufactura." data-name="Industrial"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">04</span><span class="nm">Industrial</span></span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Cliente ya registrado: retoma su historial y continúa el embudo." data-name="Cliente Existente"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">05</span><span class="nm">Cliente Existente</span></span></button>
+        <button class="step" role="tab" aria-selected="false" data-prompt="Ruta de compra comercial: adquisición de propiedad comercial." data-name="Comercial Compra"><span class="top"><span class="tick"></span><span class="line"></span></span><span class="body"><span class="sn">06</span><span class="nm">Comercial Compra</span></span></button>
       </div>
-      <div class="rail" role="list" aria-label="Estados del flow_step 1 a 6">
-        <div class="node" role="listitem"><div class="top"><span class="tick"></span><span class="line"></span></div><div class="body"><div class="step">01</div><div class="name">Nuevo Cliente</div></div></div>
-        <div class="node" role="listitem"><div class="top"><span class="tick"></span><span class="line"></span></div><div class="body"><div class="step">02</div><div class="name">Inmuebles</div></div></div>
-        <div class="node" role="listitem"><div class="top"><span class="tick"></span><span class="line"></span></div><div class="body"><div class="step">03</div><div class="name">Comercial Renta</div></div></div>
-        <div class="node" role="listitem"><div class="top"><span class="tick"></span><span class="line"></span></div><div class="body"><div class="step">04</div><div class="name">Industrial</div></div></div>
-        <div class="node" role="listitem"><div class="top"><span class="tick"></span><span class="line"></span></div><div class="body"><div class="step">05</div><div class="name">Cliente Existente</div></div></div>
-        <div class="node" role="listitem"><div class="top"><span class="tick"></span><span class="line"></span></div><div class="body"><div class="step">06</div><div class="name">Comercial Compra</div></div></div>
+      <div class="rail-detail" id="railDetail" aria-live="polite">
+        <span class="dk" id="rdName">Nuevo Cliente</span>
+        <span class="dv" id="rdPrompt"><b>Set prompt:</b> Recepción del primer contacto: identifica al cliente y abre el registro.</span>
       </div>
-      <div class="rail-note">
-        <span class="tag">Fuera del riel</span>
-        <span><b style="color:var(--ink)">Transferencia a Humano</b> NO es un flow_step; se dispara por la tool <span class="mono">transfer-human</span>.</span>
+      <div class="rail-note"><span class="tag">Fuera del riel</span><span><b style="color:var(--ink)">Transferencia a Humano</b> NO es un flow_step; se dispara por la tool <span class="mono">transfer-human</span>.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 05 FLUJOS (TABS) ===== -->
+<section class="section" id="flujos">
+  <div class="wrap rv">
+    <span class="eyebrow">05 — Flujos</span>
+    <h2>Los cuatro workflows</h2>
+    <p class="lead" style="margin:22px 0 34px">Cada uno se dispara por su propio webhook. Acoplados por el estado compartido en <span class="b">Supabase</span>.</p>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Workflows">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="p0"><span class="tn">Call Control</span><span class="tt">El recepcionista</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="p1"><span class="tn">Agents B2B</span><span class="tt">El cerebro post-llamada</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="p2"><span class="tn">Schedule Meeting</span><span class="tt">Agendamiento</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="p3"><span class="tn">End of Call</span><span class="tt">Cierre</span></button>
+    </div>
+
+    <div class="panel active" id="p0" role="tabpanel">
+      <span class="pill"><span>Trigger</span><span class="pv">POST /fd902016… · Vapi al entrar la llamada</span></span>
+      <p class="what">Verifica assistant-request → detecta número (ATISA vs secundario) → <b>Get User + Get Call Flow</b> en <span class="b">Supabase</span> → If userExists (existe: revisa reincidencia &lt;20 min; no existe: busca/crea Lead en <span class="b">Zoho</span> + usuario) → Switch <b>"Flow Path"</b> por flow_step carga el prompt → responde a <span class="b">Vapi</span>.</p>
+      <div class="flags">
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Dos <b>"Create Lead"</b> (Zoho v7 y v2).</span></div>
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Control de horario con <b>bug conocido</b> ("REVISAR TIEMPO").</span></div>
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Nodo Wait de 1s = <b>parche de race condition</b>.</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="p1" role="tabpanel">
+      <span class="pill"><span>Trigger</span><span class="pv">POST /9b04a605… · tools atisa-transfer / transfer-human</span></span>
+      <p class="what">Pide <span class="mono">GET api.vapi.ai/call?limit=15</span> y <b>adivina la llamada correcta</b> → identifica cuenta <span class="b">Twilio</span> (MN / USN) → IA: "Obtain summary" (<span class="b">Gemini</span>) y "Output Variables" (<span class="b">Gemini</span>, parser auto-reparable) extrae JSON → actualiza <span class="b">Supabase</span> → clasifica proyecto (<span class="b">o4-mini</span>) → actualiza <span class="b">Zoho</span> por layout → transfiere vía <span class="b">Twilio</span>.</p>
+      <div class="flags">
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Emparejamiento de llamada <b>frágil</b> (limit=15).</span></div>
+        <div class="flag"><span class="bdot"></span><span class="ftxt">TODA la lógica <b>duplicada MN/USN</b>.</span></div>
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Modelos distintos para la misma tarea.</span></div>
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Si el parser no repara el JSON, <b>se cae el flujo</b>.</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="p2" role="tabpanel">
+      <span class="pill"><span>Trigger</span><span class="pv">POST /447b8622… · tool atisa-schedule-meeting</span></span>
+      <p class="what">Lee usuario + zoho_updates + intereses en <span class="b">Supabase</span> → If: no hay cita → crea <b>Contacto (v8) + Evento (v8)</b> + notas; ya hay cita → actualiza <b>Evento (v2.1)</b> → marca en Supabase. Un solo agente IA (<span class="b">Claude 3.7 Sonnet</span>) para interpretar fecha/hora.</p>
+      <div class="flags">
+        <div class="flag"><span class="bdot"></span><span class="ftxt">Mezcla <b>3 versiones de la API de Zoho</b> (v2, v2.1, v8) en un mismo flujo.</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="p3" role="tabpanel">
+      <span class="pill"><span>Trigger</span><span class="pv">POST /cd37b32b… · filtra end-of-call-report</span></span>
+      <p class="what">Evita doble proceso si fue atisa-transfer; si el usuario colgó (hang-up) igual guarda la transcripción. IA: <b><span class="b">GPT-4.1</span> + <span class="b">GPT-4o</span> + <span class="b">Claude 3.7</span> en paralelo</b> → actualiza call_flows / users / intereses en <span class="b">Supabase</span> + notas en <span class="b">Zoho</span>. Wait de 3s (el más largo).</p>
+      <div class="flags">
+        <div class="flag"><span class="bdot"></span><span class="ftxt"><b>Tres modelos de IA distintos</b> en un solo cierre: costo, latencia y puntos de falla ×3.</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===================== 4. LOS CUATRO FLUJOS ===================== -->
-<section class="section">
-  <div class="wrap">
-    <span class="section-num">04 — Flujos</span>
-    <h2>Los cuatro flujos</h2>
-    <p class="lead" style="margin:22px 0 34px">Cada workflow se dispara por su propio webhook. Acoplados por el estado compartido en Supabase.</p>
-    <div class="flows">
-
-      <article class="flow">
-        <div class="fhead"><div class="ftitle">Call Control</div></div>
-        <div class="ftag">El recepcionista.</div>
-        <span class="pill"><span class="pk">Trigger</span><span class="pv">POST /fd902016…</span></span>
-        <p class="what" style="margin-top:16px">Verifica assistant-request → detecta número (ATISA vs secundario) → <b>Get User + Get Call Flow</b> en Supabase → If userExists (existe: revisa reincidencia &lt;20 min; no existe: busca/crea Lead en Zoho + usuario) → Switch <b>"Flow Path"</b> por flow_step carga el prompt → responde a Vapi.</p>
-        <div class="flags">
-          <div class="flag"><span class="bdot"></span><span class="ftxt">Dos <b>"Create Lead"</b> (Zoho v7 y v2).</span></div>
-          <div class="flag"><span class="bdot"></span><span class="ftxt">Control de horario con <b>bug conocido</b> (nota "REVISAR TIEMPO").</span></div>
-          <div class="flag"><span class="bdot"></span><span class="ftxt">Nodo Wait de 1s = <b>parche de race condition</b>.</span></div>
-        </div>
-      </article>
-
-      <article class="flow">
-        <div class="fhead"><div class="ftitle">Agents B2B</div></div>
-        <div class="ftag">El cerebro post-llamada y transferencias.</div>
-        <span class="pill"><span class="pk">Trigger</span><span class="pv">POST /9b04a605…</span></span>
-        <p class="what" style="margin-top:16px">Invocado por las tools atisa-transfer / transfer-human. Pide <span class="mono">GET api.vapi.ai/call?limit=15</span> y <b>adivina la llamada</b> → identifica cuenta Twilio (MN / USN) → IA: "Obtain summary" (Gemini) y "Output Variables" (Gemini, parser auto-reparable) extrae JSON → actualiza Supabase → clasifica proyecto (o4-mini) → actualiza Zoho por layout → transfiere vía Twilio.</p>
-        <div class="flags">
-          <div class="flag"><span class="bdot"></span><span class="ftxt">Emparejamiento de llamada <b>frágil</b> (limit=15).</span></div>
-          <div class="flag"><span class="bdot"></span><span class="ftxt">TODA la lógica <b>duplicada MN/USN</b>.</span></div>
-          <div class="flag"><span class="bdot"></span><span class="ftxt">Modelos distintos para la misma tarea; si el parser no repara el JSON, <b>se cae el flujo</b>.</span></div>
-        </div>
-      </article>
-
-      <article class="flow">
-        <div class="fhead"><div class="ftitle">Schedule Meeting</div></div>
-        <div class="ftag">Agendamiento.</div>
-        <span class="pill"><span class="pk">Trigger</span><span class="pv">POST /447b8622…</span></span>
-        <p class="what" style="margin-top:16px">Tool atisa-schedule-meeting. Lee usuario + zoho_updates + intereses → If: no hay cita → crea <b>Contacto (v8) + Evento (v8)</b> + notas; ya hay cita → actualiza <b>Evento (v2.1)</b> → marca en Supabase. Un solo agente IA (Claude 3.7 Sonnet) para interpretar fecha/hora.</p>
-        <div class="flags">
-          <div class="flag"><span class="bdot"></span><span class="ftxt">Mezcla <b>3 versiones de la API de Zoho</b> (v2, v2.1, v8) en un mismo flujo.</span></div>
-        </div>
-      </article>
-
-      <article class="flow">
-        <div class="fhead"><div class="ftitle">End of Call</div></div>
-        <div class="ftag">Cierre.</div>
-        <span class="pill"><span class="pk">Trigger</span><span class="pv">POST /cd37b32b…</span></span>
-        <p class="what" style="margin-top:16px">Filtra type == end-of-call-report. Evita doble proceso si fue atisa-transfer; si el usuario colgó (hang-up) igual guarda la transcripción. IA: <b>GPT-4.1 + GPT-4o + Claude 3.7 en paralelo</b> → actualiza call_flows / users / intereses + notas en Zoho. Wait de 3s (el más largo).</p>
-        <div class="flags">
-          <div class="flag"><span class="bdot"></span><span class="ftxt"><b>Tres modelos de IA distintos</b> en un solo flujo de cierre: costo, latencia y puntos de falla ×3.</span></div>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
-
-<!-- ===================== 5. DIAGNÓSTICO ===================== -->
-<section class="section">
-  <div class="wrap">
-    <span class="section-num">05 — Diagnóstico</span>
+<!-- ===== 06 DIAGNÓSTICO ===== -->
+<section class="section" id="diagnostico">
+  <div class="wrap rv">
+    <span class="eyebrow">06 — Diagnóstico</span>
     <h2>Diagnóstico de inestabilidad</h2>
     <p class="lead" style="margin:22px 0 34px">Hallazgos de falla del sistema, rankeados por severidad.</p>
     <div class="diag">
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.1</span><span class="sev critico">Crítico</span></div>
-        <div>
-          <h3>Emparejamiento de llamadas frágil</h3>
-          <p>Usa <span class="mono">GET /call?limit=15</span> y adivina cuál es; con llamadas simultáneas agarra la equivocada o no la halla → desconexiones y datos cruzados.</p>
-          <div class="fix"><b>Fix:</b> usar el call.id que Vapi ya manda en el webhook.</div>
-        </div>
-      </div>
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.2</span><span class="sev alto">Alto</span></div>
-        <div>
-          <h3>Parches de Wait fijos</h3>
-          <p>5 nodos (1s ×4, 3s) para "esperar" sincronizaciones; no garantizan nada → síntoma de race condition no resuelta.</p>
-        </div>
-      </div>
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.3</span><span class="sev alto">Alto</span></div>
-        <div>
-          <h3>Lógica duplicada MN/USN</h3>
-          <p>Ramas copy-paste; los arreglos se aplican en una y se olvidan en la otra → comportamiento inconsistente según el número.</p>
-        </div>
-      </div>
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.4</span><span class="sev alto">Alto</span></div>
-        <div>
-          <h3>Versiones de la API de Zoho mezcladas</h3>
-          <p>v2 / v2.1 / v7 / v8 conviviendo. Al deprecarse una, fallan solo algunos nodos → fallos intermitentes difíciles de diagnosticar.</p>
-        </div>
-      </div>
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.5</span><span class="sev medio">Medio</span></div>
-        <div>
-          <h3>Dependencia de parsers de IA "auto-reparables"</h3>
-          <p>Si la reparación falla, se cae el flujo; modelos distintos varían el formato y agravan esto.</p>
-        </div>
-      </div>
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.6</span><span class="sev medio">Medio</span></div>
-        <div>
-          <h3>Estado mutable sin transacciones</h3>
-          <p>El flow_step se lee, procesa y reescribe; dos eventos casi simultáneos se pisan → cliente en estado incorrecto. Sin locking ni idempotencia real.</p>
-        </div>
-      </div>
-
-      <div class="issue">
-        <div class="left"><span class="code"><span class="bdot"></span>8.7</span><span class="sev medio">Medio</span></div>
-        <div>
-          <h3>Indecisión técnica documentada por los devs</h3>
-          <p>"Probar con Gemini", "Probar con GPT 4.1 o o4 mini", "REVISAR TIEMPO" → se entregó experimental.</p>
-        </div>
-      </div>
-
+      <div class="issue"><div class="left"><span class="code crit"><span class="bdot"></span>8.1</span><span class="sev crit">Crítico</span></div><div><h3>Emparejamiento de llamadas frágil</h3><p>Usa <span class="mono">GET /call?limit=15</span> y adivina cuál es; con llamadas simultáneas agarra la equivocada o no la halla → desconexiones y datos cruzados.</p><div class="fix"><b>Fix:</b> usar el call.id que <span class="b">Vapi</span> ya manda en el webhook.</div></div></div>
+      <div class="issue"><div class="left"><span class="code hi"><span class="bdot"></span>8.2</span><span class="sev hi">Alto</span></div><div><h3>Parches de Wait fijos</h3><p>5 nodos (1s ×4, 3s) para "esperar" sincronizaciones; no garantizan nada → síntoma de race condition no resuelta.</p></div></div>
+      <div class="issue"><div class="left"><span class="code hi"><span class="bdot"></span>8.3</span><span class="sev hi">Alto</span></div><div><h3>Lógica duplicada MN/USN</h3><p>Ramas copy-paste; los arreglos se aplican en una y se olvidan en la otra → comportamiento inconsistente según el número.</p></div></div>
+      <div class="issue"><div class="left"><span class="code hi"><span class="bdot"></span>8.4</span><span class="sev hi">Alto</span></div><div><h3>Versiones de la API de Zoho mezcladas</h3><p>v2 / v2.1 / v7 / v8 conviviendo. Al deprecarse una, fallan solo algunos nodos → fallos intermitentes difíciles de diagnosticar.</p></div></div>
+      <div class="issue"><div class="left"><span class="code me"><span class="bdot"></span>8.5</span><span class="sev me">Medio</span></div><div><h3>Parsers de IA "auto-reparables"</h3><p>Si la reparación falla, se cae el flujo; modelos distintos varían el formato y agravan esto.</p></div></div>
+      <div class="issue"><div class="left"><span class="code me"><span class="bdot"></span>8.6</span><span class="sev me">Medio</span></div><div><h3>Estado mutable sin transacciones</h3><p>El flow_step se lee, procesa y reescribe; dos eventos casi simultáneos se pisan → cliente en estado incorrecto. Sin locking ni idempotencia real.</p></div></div>
+      <div class="issue"><div class="left"><span class="code me"><span class="bdot"></span>8.7</span><span class="sev me">Medio</span></div><div><h3>Indecisión técnica documentada</h3><p>"Probar con Gemini", "Probar con GPT 4.1 o o4 mini", "REVISAR TIEMPO" → se entregó experimental.</p></div></div>
     </div>
   </div>
 </section>
 
-<!-- ===================== 6. MAPA DE DISPARADORES ===================== -->
-<section class="section">
-  <div class="wrap">
-    <span class="section-num">06 — Disparadores</span>
+<!-- ===== 07 DISPARADORES ===== -->
+<section class="section" id="disparadores">
+  <div class="wrap rv">
+    <span class="eyebrow">07 — Disparadores</span>
     <h2>Mapa de disparadores</h2>
     <p class="lead" style="margin:22px 0 34px">Qué evento dispara cada workflow y por cuál webhook entra.</p>
     <table class="tbl">
@@ -485,10 +606,10 @@
   </div>
 </section>
 
-<!-- ===================== 7. RECOMENDACIONES ===================== -->
-<section class="section">
-  <div class="wrap">
-    <span class="section-num">07 — Recomendaciones</span>
+<!-- ===== 08 RECOS ===== -->
+<section class="section" id="recos">
+  <div class="wrap rv">
+    <span class="eyebrow">08 — Recomendaciones</span>
     <h2>Recomendaciones</h2>
     <p class="lead" style="margin:22px 0 34px">En orden de impacto sobre la estabilidad.</p>
     <div class="recos">
@@ -496,43 +617,183 @@
       <div class="reco"><span class="rn">2</span><p><b>Eliminar los Wait fijos;</b> resolver sincronización con confirmaciones reales o idempotencia.</p></div>
       <div class="reco"><span class="rn">3</span><p><b>Unificar MN/USN</b> en una sola rama parametrizada.</p></div>
       <div class="reco"><span class="rn">4</span><p><b>Congelar una sola versión de la API de Zoho</b> y un solo modelo de IA por tarea.</p></div>
-      <div class="reco"><span class="rn">5</span><p><b>Evaluar si 239 nodos</b> en 4 workflows acoplados por estado compartido justifican seguir en n8n o conviene migrar la lógica a código.</p></div>
+      <div class="reco"><span class="rn">5</span><p><b>Evaluar si 239 nodos</b> en 4 workflows acoplados por estado compartido justifican seguir en <span class="b">n8n</span> o conviene migrar la lógica a código.</p></div>
     </div>
   </div>
 </section>
 
-<!-- ===================== CIERRE ===================== -->
+<!-- ===== CIERRE ===== -->
 <section class="section closing">
-  <div class="wrap">
+  <div class="wrap rv">
     <span class="eyebrow">Cierre — dependencia del proveedor</span>
     <h2>Quién controla la infraestructura</h2>
-    <p style="margin:22px 0 8px">Antes de cualquier decisión técnica hay que resolver de quién es cada parte del sistema.</p>
+    <p style="margin:22px 0 10px">Antes de cualquier decisión técnica hay que resolver de quién es cada parte del sistema.</p>
     <div class="callout">
       <span class="mk">Dependencia</span>
       <p>El endpoint <b>api.tendencia.ai/webhooks/vapi</b> y las credenciales de <b>Twilio / Vapi</b> están atadas a la cuenta del proveedor (<b>TendencIA / M Consulting</b>). Confirmar qué infraestructura es de ATISA y cuál del proveedor, porque eso define si pueden operar el sistema sin ellos.</p>
     </div>
-    <div class="dl">
-      <a href="./ATISA_Voicebot_Ingenieria_Inversa.md" download>Descargar análisis (.md)<span class="arr">↓</span></a>
-    </div>
+    <div class="dl"><a href="./ATISA_Voicebot_Ingenieria_Inversa.md" download>Descargar análisis (.md) ↓</a></div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">ATISA Voicebot · Ingeniería inversa · Teardown técnico</div>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;width:100%">
+    <span>ATISA Voicebot · Ingeniería inversa</span>
+    <span>Vapi + n8n · 239 nodos · 4 workflows</span>
+  </div>
 </footer>
 
 <script>
-  // Ajusta el dasharray real de la línea de señal al largo de su path.
-  (function(){
-    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var p = document.getElementById('sig');
-    if(!p) return;
-    try{
-      var len = Math.ceil(p.getTotalLength());
-      p.style.setProperty('--len', len);
-    }catch(e){/* getTotalLength no disponible: el fallback CSS --len ya cubre */}
-  })();
-</script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---- oscilloscope dasharray ---- */
+  var sig = document.querySelector('.scope .draw');
+  if(sig && !reduce){ try{ sig.style.setProperty('--len', Math.ceil(sig.getTotalLength())); }catch(e){} }
+
+  /* ---- count-up ---- */
+  function countUp(el){
+    var target = +el.getAttribute('data-count');
+    if(reduce){ el.textContent = target; return; }
+    var start = null, dur = 1100;
+    function tick(t){
+      if(!start) start = t;
+      var p = Math.min((t-start)/dur, 1);
+      var e = 1 - Math.pow(1-p, 3);
+      el.textContent = Math.round(target*e);
+      if(p<1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---- scroll reveal + count trigger ---- */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        en.target.classList.add('in');
+        en.target.querySelectorAll && en.target.querySelectorAll('[data-count]').forEach(countUp);
+        io.unobserve(en.target);
+      }
+    });
+  }, {threshold:.16});
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+  // hero stats live outside .rv reveal pattern -> observe the stats row
+  var statsRow = document.querySelector('.stats');
+  if(statsRow){
+    var io2 = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.querySelectorAll('[data-count]').forEach(countUp); io2.unobserve(e.target);} }); }, {threshold:.3});
+    io2.observe(statsRow);
+  }
+
+  /* ---- rail (flow_step detail) ---- */
+  var rail = document.getElementById('rail');
+  if(rail){
+    var steps = rail.querySelectorAll('.step');
+    var rdName = document.getElementById('rdName'), rdPrompt = document.getElementById('rdPrompt');
+    function selectStep(s){
+      steps.forEach(function(x){ x.setAttribute('aria-selected', x===s ? 'true':'false'); });
+      rdName.textContent = s.getAttribute('data-name');
+      rdPrompt.innerHTML = '<b>Set prompt:</b> ' + s.getAttribute('data-prompt');
+    }
+    steps.forEach(function(s){
+      s.addEventListener('click', function(){ selectStep(s); });
+      s.addEventListener('mouseenter', function(){ selectStep(s); });
+      s.addEventListener('focus', function(){ selectStep(s); });
+    });
+  }
+
+  /* ---- tabs (workflows) ---- */
+  var tabsWrap = document.getElementById('tabs');
+  if(tabsWrap){
+    var tabs = tabsWrap.querySelectorAll('.tab');
+    var panels = document.querySelectorAll('.panel');
+    tabs.forEach(function(t, i){
+      t.addEventListener('click', function(){
+        tabs.forEach(function(x){ x.setAttribute('aria-selected','false'); });
+        t.setAttribute('aria-selected','true');
+        panels.forEach(function(p){ p.classList.remove('active'); });
+        panels[i].classList.add('active');
+      });
+    });
+  }
+
+  /* ---- flow map connectors ---- */
+  var map = document.getElementById('flowmap');
+  var svg = document.getElementById('edges');
+  if(map && svg){
+    // from -> to, type: 'live' | 'w' (write) | 'a' (after)
+    var EDGES = [
+      ['tel','vapi','live'], ['vapi','cc','live'], ['cc','sb','live'], ['cc','zoho','w'],
+      ['sb','sw','live'], ['sw','conv','live'],
+      ['conv','b2b','live'], ['conv','sched','live'], ['conv','eoc','a'],
+      ['b2b','sb','w'], ['b2b','zoho','w'], ['b2b','twilio','live'],
+      ['sched','sb','w'], ['sched','zoho','w'],
+      ['eoc','sb','w'], ['eoc','zoho','w']
+    ];
+    var nodeEls = {};
+    map.querySelectorAll('[data-fm]').forEach(function(n){ nodeEls[n.getAttribute('data-fm')] = n; });
+    var paths = [];
+
+    function rectOf(el){
+      var b = el.getBoundingClientRect(), m = map.getBoundingClientRect();
+      return {l:b.left-m.left, t:b.top-m.top, r:b.right-m.left, b:b.bottom-m.top, cx:b.left-m.left+b.width/2, cy:b.top-m.top+b.height/2};
+    }
+    function pathFor(a, z){
+      var dx = z.cx-a.cx, dy = z.cy-a.cy, p1, p2, c1, c2;
+      if(Math.abs(dx) >= Math.abs(dy)){
+        p1 = {x: dx>=0?a.r:a.l, y:a.cy}; p2 = {x: dx>=0?z.l:z.r, y:z.cy};
+        var mx=(p1.x+p2.x)/2; c1={x:mx,y:p1.y}; c2={x:mx,y:p2.y};
+      } else {
+        p1 = {x:a.cx, y: dy>=0?a.b:a.t}; p2 = {x:z.cx, y: dy>=0?z.t:z.b};
+        var my=(p1.y+p2.y)/2; c1={x:p1.x,y:my}; c2={x:p2.x,y:my};
+      }
+      return 'M'+p1.x+','+p1.y+' C'+c1.x+','+c1.y+' '+c2.x+','+c2.y+' '+p2.x+','+p2.y;
+    }
+    function draw(){
+      var m = map.getBoundingClientRect();
+      svg.setAttribute('viewBox','0 0 '+m.width+' '+m.height);
+      if(!paths.length){
+        EDGES.forEach(function(e){
+          var p = document.createElementNS('http://www.w3.org/2000/svg','path');
+          p.setAttribute('class','edge'+(e[2]==='w'?' w':e[2]==='a'?' a':''));
+          p.setAttribute('marker-end', e[2]==='w'?'url(#ar-w)':e[2]==='a'?'url(#ar-a)':'url(#ar-r)');
+          p.setAttribute('data-a', e[0]); p.setAttribute('data-z', e[1]);
+          svg.appendChild(p); paths.push(p);
+        });
+      }
+      paths.forEach(function(p){
+        var a = nodeEls[p.getAttribute('data-a')], z = nodeEls[p.getAttribute('data-z')];
+        if(a && z) p.setAttribute('d', pathFor(rectOf(a), rectOf(z)));
+      });
+    }
+    // only draw when grid layout active (desktop)
+    function active(){ return window.getComputedStyle(svg).display !== 'none'; }
+    function redraw(){ if(active()) draw(); }
+    if(window.requestAnimationFrame) requestAnimationFrame(redraw); else redraw();
+    window.addEventListener('resize', function(){ requestAnimationFrame(redraw); });
+    window.addEventListener('load', redraw);
+
+    // interactivity: highlight connections
+    function focusNode(id){
+      map.classList.add('focusing');
+      var connected = {};
+      connected[id] = true;
+      paths.forEach(function(p){
+        var a=p.getAttribute('data-a'), z=p.getAttribute('data-z'), hot = (a===id||z===id);
+        p.classList.toggle('hot', hot);
+        if(hot){ connected[a]=true; connected[z]=true; }
+      });
+      Object.keys(nodeEls).forEach(function(k){ nodeEls[k].classList.toggle('hot', !!connected[k]); });
+    }
+    function clearFocus(){ map.classList.remove('focusing'); paths.forEach(function(p){p.classList.remove('hot');}); map.querySelectorAll('.fmnode').forEach(function(n){n.classList.remove('hot');}); }
+    Object.keys(nodeEls).forEach(function(k){
+      var n = nodeEls[k];
+      n.addEventListener('mouseenter', function(){ if(active()) focusNode(k); });
+      n.addEventListener('mouseleave', clearFocus);
+      n.addEventListener('focus', function(){ if(active()) focusNode(k); });
+      n.addEventListener('blur', clearFocus);
+    });
+  }
+})();
+</script>
 </body>
 </html>
