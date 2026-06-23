@@ -288,6 +288,17 @@
     .draw{stroke-dashoffset:0!important}
     .rv{opacity:1;transform:none}
   }
+
+  /* ---------- vistas (3 niveles) ---------- */
+  .view{display:none}
+  .view.active{display:block}
+  .nav-links a.on{color:var(--ink)}
+  .nav-links a.on::after{transform:scaleX(1)}
+  @media(max-width:780px){
+    .nav-links{display:flex;flex-wrap:wrap;gap:1px 2px;justify-content:flex-end}
+    .nav-links a{font-size:11px;padding:6px 8px}
+    .brandlock .sub,.brandlock .div{display:none}
+  }
 </style>
 </head>
 <body>
@@ -299,20 +310,18 @@
       <!-- ATISA logo (real, vectorizado del sitio) -->
       <svg viewBox="0 0 501.33334 133.33333" role="img" aria-label="ATISA"><g transform="matrix(1.3333333,0,0,-1.3333333,0,133.33333)"><path style="fill:#000" d="M 42.333,74.448 H 56.981 V 59.672 H 42.333 Z"/><g transform="translate(42.0139,99.9998)"><path style="fill:#d2262c" d="m 0,0 v -23.055 c -14.148,-4.182 -22.353,-19.483 -18.329,-34.174 4.027,-14.694 18.763,-23.215 32.912,-19.033 14.15,4.184 22.356,19.48 18.326,34.178 -2.481,9.067 -9.244,16.196 -17.938,18.91 L 14.94,-0.048 c 20.794,-3.45 37.062,-20.453 40.241,-42.069 4.036,-27.452 -14.123,-53.107 -40.561,-57.299 -26.437,-4.193 -51.142,14.664 -55.179,42.12 C -44.596,-29.842 -26.439,-4.189 0,0"/></g><g transform="translate(130.7464,87.178)"><path style="fill:#000" d="M 0,0 H 18.989 L 40.577,-52.417 H 22.175 l -2.822,8.397 H -0.678 l -2.862,-8.354 h -18.007 z m 9.385,-14.352 -6.412,-18.14 h 12.433 z"/></g><g transform="translate(161.2625,87.0686)"><path style="fill:#000" d="M 0,0 H 62.237 V -15.981 H 38.449 V -52.393 H 23.34 v 36.24 H 0 Z"/></g><path style="fill:#000" d="m 229.02,86.915 h 15.522 V 34.853 H 229.02 Z"/><g transform="translate(311.5754,87.0969)"><path style="fill:#000" d="m 0,0 v -11.654 h -46.862 v -8.817 h 32.171 c 6.44,0 12.266,-3.959 14.843,-10.088 V -41.258 C -1.72,-47.563 -7.187,-51.984 -13.531,-52.314 H -62.046 V -40.6 h 46.461 v 8.288 h -33.733 c -5.976,0.997 -10.938,5.335 -12.905,11.28 v 10.367 c 2.262,5.911 7.508,10.021 13.603,10.665 z"/></g><g transform="translate(337.5002,54.6863)"><path style="fill:#000" d="M 0,0 6.415,18.14 12.43,0 Z M 16.016,32.492 H -2.969 l -21.554,-52.374 h 18.011 l 2.862,8.354 h 20.034 l 2.819,-8.397 h 18.403 z"/></g></g></svg>
       <span class="div" aria-hidden="true"></span>
-      <span class="sub">Ingeniería inversa</span>
+      <span class="sub">Voicebot</span>
     </a>
-    <nav class="nav-links" aria-label="Secciones">
-      <a href="#recorrido">Recorrido</a>
-      <a href="#sistema">Sistema</a>
-      <a href="#stack">Stack</a>
-      <a href="#flujos">Flujos</a>
-      <a href="#diagnostico">Diagnóstico</a>
-      <a href="#recos">Recos</a>
+    <nav class="nav-links" aria-label="Vistas">
+      <a href="#top" class="on" data-view="ing">Ingeniería inversa</a>
+      <a href="#top" data-view="val">Análisis de valor</a>
+      <a href="#top" data-view="fin">Análisis financiero</a>
     </nav>
   </div>
 </header>
 
 <a id="top"></a>
+<div class="view active" id="v-ing">
 
 <!-- ===== HERO ===== -->
 <section class="hero">
@@ -615,6 +624,503 @@
   </div>
 </section>
 
+</div>
+
+<div class="view" id="v-fin">
+  <section class="section" style="border-top:none">
+    <div class="wrap">
+      <span class="eyebrow">Análisis financiero</span>
+      <h2>Cuánto cuesta operar el voicebot</h2>
+      <p class="lead" style="margin:22px 0 30px">Primero, lo que cuesta el stack actual hoy. Aparte, dos propuestas de stack para comparar si conviene internalizarlo. Costo por minuto de llamada, estimado a junio de 2026. Todas las cifras en dólares (USD).</p>
+
+<div class="jus-h">Supuestos del cálculo</div>
+<div class="fin-calc">
+  <div class="fin-calc-hd">
+    <span class="fin-eyebrow">Calculadora de supuestos</span>
+    <span class="fin-note">estimación ajustable</span>
+  </div>
+  <div class="fin-inputs">
+    <label class="fin-field">
+      <span class="fin-lbl">Leads / mes</span>
+      <input class="fin-in" id="finLeads" type="number" min="0" step="1" value="231" inputmode="numeric">
+      <span class="fin-sub">promedio real del CRM, editable</span>
+    </label>
+    <label class="fin-field">
+      <span class="fin-lbl">% atendido por IA</span>
+      <input class="fin-in" id="finPct" type="number" min="0" max="100" step="1" value="57" inputmode="numeric">
+      <span class="fin-sub">arranca con el 57% que entra fuera de horario</span>
+    </label>
+    <label class="fin-field">
+      <span class="fin-lbl">Minutos / llamada</span>
+      <input class="fin-in" id="finMins" type="number" min="0" step="0.5" value="4" inputmode="decimal">
+      <span class="fin-sub">estimación, llamada de calificación</span>
+    </label>
+    <div class="fin-field fin-out">
+      <span class="fin-lbl">Llamadas IA / mes</span>
+      <span class="fin-val" id="finCallsOut">132</span>
+      <span class="fin-sub">leads × % atendido</span>
+    </div>
+    <div class="fin-field fin-out">
+      <span class="fin-lbl">Minutos / mes</span>
+      <span class="fin-val" id="finTotalMin">527</span>
+      <span class="fin-sub">llamadas × minutos</span>
+    </div>
+  </div>
+</div>
+
+<div class="jus-h">Costo por minuto, 3 escenarios</div>
+<div class="fin-scroll">
+  <table class="tbl fin-tbl">
+    <thead>
+      <tr>
+        <th>Concepto</th>
+        <th>Stack actual · hoy</th>
+        <th>Propuesta 1 · voz premium gestionada</th>
+        <th>Propuesta 2 · interno, costo mínimo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="hook">Operación</td>
+        <td>Operado por el proveedor (TendencIA / M Consulting)</td>
+        <td>Gestionado: ATISA contrata, no opera infra</td>
+        <td>Interno: lo construye y mantiene el ingeniero de ATISA</td>
+      </tr>
+      <tr>
+        <td class="hook">Plataforma de voz</td>
+        <td>Vapi <span class="mono">$0.05/min</span></td>
+        <td>ElevenLabs Conversational AI <span class="mono">$0.08/min</span><span class="fin-tiny">plan Business $1,320/mes incluye 12,375 min</span></td>
+        <td>Pipecat / LiveKit <span class="fin-tiny">orquestación propia, sin fee de plataforma</span></td>
+      </tr>
+      <tr>
+        <td class="hook">STT · LLM · TTS en llamada</td>
+        <td>Gestionado dentro de Vapi <span class="mono">~$0.10–0.18/min</span><span class="fin-tiny">la ingeniería inversa no documenta qué proveedor de voz usa; estimación típica de Vapi</span></td>
+        <td>STT y TTS incluidos en el agente; LLM (GPT-4o) passthrough de tokens</td>
+        <td>Deepgram STT <span class="mono">$0.0043</span> + GPT-4o-mini <span class="mono">~$0.01</span> + TTS Cartesia / Aura <span class="mono">~$0.015</span> <span class="fin-tiny">por minuto</span></td>
+      </tr>
+      <tr>
+        <td class="hook">Telefonía</td>
+        <td>Twilio <span class="mono">~$0.013/min</span><span class="fin-tiny">2 cuentas: México y EE.UU.</span></td>
+        <td>Twilio <span class="mono">~$0.013/min</span></td>
+        <td>Twilio <span class="mono">~$0.013/min</span></td>
+      </tr>
+      <tr>
+        <td class="hook">IA post-llamada</td>
+        <td>Multi-modelo (Gemini + GPT-4.1 + GPT-4o + o4-mini + Claude 3.7) <span class="mono">~$0.02–0.05 por llamada</span></td>
+        <td>Aplica igual si se replica <span class="fin-tiny">~$0.02–0.05 por llamada</span></td>
+        <td class="fin-na">opcional, fuera del pipeline base</td>
+      </tr>
+      <tr class="fin-row-total-min">
+        <td class="wf">Total por minuto</td>
+        <td class="wf fin-strong">~$0.17–0.23/min</td>
+        <td class="wf fin-strong">~$0.10–0.20/min</td>
+        <td class="wf fin-strong">~$0.04–0.08/min</td>
+      </tr>
+      <tr>
+        <td class="hook">Notas</td>
+        <td>Infra fija aparte: n8n + Supabase + licencias Zoho. <b>No incluye el markup del proveedor.</b></td>
+        <td>La mejor calidad de voz percibida. Sigue requiriendo LLM, telefonía y la integración al CRM. Sube la calidad, no resuelve la operación.</td>
+        <td>El más barato por minuto. Alternativa más simple: OpenAI Realtime <span class="mono">~$0.10–0.18/min</span>. Con open-source (Whisper + Kokoro) baja más, pero exige GPU e infra propia.</td>
+      </tr>
+      <tr class="fin-row-month">
+        <td class="wf">Costo mensual aprox.</td>
+        <td class="wf"><span class="fin-month" id="finM1" data-rate="0.20">~$105</span></td>
+        <td class="wf"><span class="fin-month" id="finM2" data-rate="0.15">~$79</span></td>
+        <td class="wf"><span class="fin-month" id="finM3" data-rate="0.06">~$32</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="jus-h">Cómo leerlo</div>
+<div class="flags fin-flags">
+  <div class="flag">
+    <span class="bdot"></span>
+    <span class="ftxt"><b>Lo que cuesta hoy es opaco.</b> ATISA paga el precio gestionado del proveedor, con un markup que no conocemos. La cifra de arriba es una suma estimada de partes, no la factura real. Acción: pedir la factura del proveedor para saber el costo exacto de hoy.</span>
+  </div>
+  <div class="flag">
+    <span class="bdot"></span>
+    <span class="ftxt"><b>El stack interno es barato por minuto, caro en ingeniería.</b> El menor costo recurrente, a cambio de tiempo de construcción y mantenimiento. ATISA tiene un ingeniero con buen nivel de IA que lo haría.</span>
+  </div>
+</div>
+
+<div class="callout fin-callout">
+  <span class="mk">Lectura</span>
+  <p>Hoy: <b>cerca de $0.17 a $0.23 por minuto estimado</b>, más infra fija y el markup del proveedor que no vemos. La propuesta 1 sube la calidad de voz pero no resuelve la operación ni el CRM. La propuesta 2 es la más barata por minuto si ATISA internaliza, a cambio de tiempo de ingeniería. No hay opción mágica: la decisión es calidad de voz contra costo recurrente contra control.</p>
+</div>
+
+<p class="fin-src">Estimaciones jun 2026 con base en pricing público de Vapi, ElevenLabs Agents, OpenAI Realtime API, Deepgram y Twilio, más comparativos de costo por minuto (Ringlyn / Retell, 2026). El costo real del stack actual es la factura del proveedor, no esta suma de partes.</p>
+
+<style>
+  .fin-calc{border:1px solid var(--hair);background:var(--panel-2);padding:20px 22px;margin-bottom:26px}
+  .fin-calc-hd{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+  .fin-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);font-weight:500}
+  .fin-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .fin-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair)}
+  .fin-field{background:var(--paper);padding:14px 16px;display:flex;flex-direction:column;gap:7px}
+  .fin-lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:500}
+  .fin-in{font-family:var(--mono);font-size:22px;color:var(--ink);font-weight:600;border:none;border-bottom:1px solid var(--hair);background:transparent;padding:2px 0 6px;width:100%;outline:none;transition:border-color .18s}
+  .fin-in:focus{border-bottom-color:var(--brand)}
+  .fin-out{background:var(--panel)}
+  .fin-val{font-family:var(--mono);font-size:22px;color:var(--brand);font-weight:600;line-height:1.1;padding:2px 0 6px;border-bottom:1px solid var(--hair)}
+  .fin-sub{font-size:12px;color:var(--ink-soft);line-height:1.35}
+  .fin-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .fin-tbl{min-width:780px}
+  .fin-tbl td .mono{display:inline-block;color:var(--ink);font-weight:500}
+  .fin-tiny{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35}
+  .fin-na{color:var(--ink-soft);font-style:italic}
+  .fin-strong{color:var(--brand)}
+  .fin-row-total-min td{background:var(--brand-wash)}
+  .fin-tbl tr.fin-row-total-min:hover td{background:var(--brand-wash)}
+  .fin-row-month td{background:var(--panel)}
+  .fin-tbl tr.fin-row-month:hover td{background:var(--panel)}
+  .fin-month{font-family:var(--mono);font-size:20px;color:var(--brand);font-weight:600}
+  .fin-flags{margin-top:22px}
+  .fin-callout{margin-top:20px}
+  .fin-src{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink-soft);line-height:1.55;margin:22px 0 0;max-width:80ch}
+  @media(max-width:620px){
+    .fin-inputs{grid-template-columns:1fr}
+    .fin-calc-hd{flex-direction:column;gap:4px}
+  }
+</style>
+
+<script>
+(function(){
+  var leads = document.getElementById('finLeads');
+  var pct = document.getElementById('finPct');
+  var mins = document.getElementById('finMins');
+  var callsOut = document.getElementById('finCallsOut');
+  var totalEl = document.getElementById('finTotalMin');
+  var cells = [document.getElementById('finM1'), document.getElementById('finM2'), document.getElementById('finM3')];
+  if(!leads || !pct || !mins) return;
+  var usd = new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0});
+  function num(el){ var v = parseFloat(el.value); return (isNaN(v) || v < 0) ? 0 : v; }
+  function recalc(){
+    var calls = num(leads) * num(pct) / 100;
+    var totalMin = calls * num(mins);
+    callsOut.textContent = Math.round(calls).toLocaleString('en-US');
+    totalEl.textContent = Math.round(totalMin).toLocaleString('en-US');
+    cells.forEach(function(c){
+      if(!c) return;
+      var rate = parseFloat(c.getAttribute('data-rate')) || 0;
+      c.textContent = '~' + usd.format(totalMin * rate);
+    });
+  }
+  leads.addEventListener('input', recalc);
+  pct.addEventListener('input', recalc);
+  mins.addEventListener('input', recalc);
+  recalc();
+})();
+</script>
+    </div>
+  </section>
+</div>
+
+<div class="view" id="v-val">
+  <section class="section" style="border-top:none">
+    <div class="wrap">
+      <span class="eyebrow">Análisis de valor</span>
+      <h2>Dónde aporta valor: tiempo, costo y calidad</h2>
+      <p class="lead" style="margin:22px 0 30px">Construido sobre 1301 leads reales del CRM, leído en tres ejes: tiempo, costo y calidad.</p>
+<!-- PANEL JUSTIFICACION -->
+<span class="pill"><span class="pv">Datos reales del CRM · 1301 leads</span></span>
+
+<div class="jus-hero">
+  <div class="jus-heroL">
+    <div class="jus-bignum">57<span class="jus-pct">%</span></div>
+    <div class="jus-heroLbl">de los leads llegan con el call center cerrado</div>
+  </div>
+  <div class="jus-heroR">
+    <p class="jus-heroP">De <b>1301 leads</b> recibidos entre el 4 de enero y el 22 de junio de 2026, <b>738 entraron fuera del horario L a V de 8:00 a 18:00</b>. Hoy esos contactos esperan hasta el siguiente día hábil para recibir respuesta.</p>
+    <div class="jus-split" role="img" aria-label="563 leads dentro de horario, 738 fuera de horario">
+      <div class="jus-splitbar">
+        <span class="jus-seg in" style="width:43%"><span class="jus-segn">563</span></span>
+        <span class="jus-seg out" style="width:57%"><span class="jus-segn">738</span></span>
+      </div>
+      <div class="jus-splitlbl">
+        <span><i class="jus-sw in"></i> Dentro de horario · 43%</span>
+        <span><i class="jus-sw out"></i> Fuera de horario · 57%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="jus-axes">
+  <div class="jus-axis">
+    <span class="jus-axeye">Tiempo</span>
+    <h3 class="jus-axh">Atiende al instante, 24/7</h3>
+    <p class="jus-axp"><b>738 leads (57%)</b> entran fuera de horario y hoy esperan al siguiente día hábil. El voicebot responde en segundos, de noche y en fin de semana. Speed to lead.</p>
+  </div>
+  <div class="jus-axis">
+    <span class="jus-axeye">Costo</span>
+    <h3 class="jus-axh">Cubre el horario muerto sin turnos extra</h3>
+    <p class="jus-axp"><b>95% de los leads son Facebook Ads</b>, presupuesto pagado: el que no se contesta a tiempo se enfría y se desperdicia. Cubrir noche y fin de semana con personal exige turnos; el voicebot lo hace a <b>$0.06 a $0.20 USD por minuto</b> (panel Financiero).</p>
+  </div>
+  <div class="jus-axis">
+    <span class="jus-axeye">Calidad</span>
+    <h3 class="jus-axh">Trabaja bajo una estructura fija</h3>
+    <p class="jus-axp">Sigue un guion definido: hace las mismas preguntas de calificación y enruta por división igual en cada contacto, sin improvisar ni saltarse pasos. Un asesor humano varía, por cansancio o prisa; el bot sigue la estructura siempre, sin que se escape ningún lead, ni los <b>738 fuera de horario</b> ni los <b>137 en seguimiento</b>. <span class="jus-axlim">Aparte va la naturalidad de la voz, qué tan humano suena: eso depende del stack, y el actual es experimental.</span></p>
+  </div>
+</div>
+
+<div class="jus-h">Volumen de leads por hora del día</div>
+<p class="jus-sub">El pico de entrada es la tarde-noche, de 17:00 a 23:00, justo cuando el call center ya cerró.</p>
+<div class="jus-chart-wrap">
+  <div class="jus-chart" role="img" aria-label="Distribución de leads por hora; el pico ocurre entre las 17 y las 23 horas">
+    <div class="jus-band" aria-hidden="true"><span>Horario call center · 8:00 a 18:00</span></div>
+    <div class="jus-col"><span class="jus-val">37</span><span class="jus-bar" style="height:43%"></span><span class="jus-hr">00</span></div>
+    <div class="jus-col"><span class="jus-val">25</span><span class="jus-bar" style="height:29%"></span><span class="jus-hr">01</span></div>
+    <div class="jus-col"><span class="jus-val">9</span><span class="jus-bar" style="height:10%"></span><span class="jus-hr">02</span></div>
+    <div class="jus-col"><span class="jus-val">14</span><span class="jus-bar" style="height:16%"></span><span class="jus-hr">03</span></div>
+    <div class="jus-col"><span class="jus-val">17</span><span class="jus-bar" style="height:20%"></span><span class="jus-hr">04</span></div>
+    <div class="jus-col"><span class="jus-val">28</span><span class="jus-bar" style="height:33%"></span><span class="jus-hr">05</span></div>
+    <div class="jus-col"><span class="jus-val">29</span><span class="jus-bar" style="height:34%"></span><span class="jus-hr">06</span></div>
+    <div class="jus-col"><span class="jus-val">39</span><span class="jus-bar" style="height:45%"></span><span class="jus-hr">07</span></div>
+    <div class="jus-col"><span class="jus-val">64</span><span class="jus-bar office" style="height:74%"></span><span class="jus-hr">08</span></div>
+    <div class="jus-col"><span class="jus-val">64</span><span class="jus-bar office" style="height:74%"></span><span class="jus-hr">09</span></div>
+    <div class="jus-col"><span class="jus-val">81</span><span class="jus-bar office" style="height:94%"></span><span class="jus-hr">10</span></div>
+    <div class="jus-col"><span class="jus-val">55</span><span class="jus-bar office" style="height:64%"></span><span class="jus-hr">11</span></div>
+    <div class="jus-col"><span class="jus-val">73</span><span class="jus-bar office" style="height:85%"></span><span class="jus-hr">12</span></div>
+    <div class="jus-col"><span class="jus-val">66</span><span class="jus-bar office" style="height:77%"></span><span class="jus-hr">13</span></div>
+    <div class="jus-col"><span class="jus-val">70</span><span class="jus-bar office" style="height:81%"></span><span class="jus-hr">14</span></div>
+    <div class="jus-col"><span class="jus-val">74</span><span class="jus-bar office" style="height:86%"></span><span class="jus-hr">15</span></div>
+    <div class="jus-col"><span class="jus-val">71</span><span class="jus-bar office" style="height:83%"></span><span class="jus-hr">16</span></div>
+    <div class="jus-col"><span class="jus-val">86</span><span class="jus-bar office" style="height:100%"></span><span class="jus-hr">17</span></div>
+    <div class="jus-col"><span class="jus-val">75</span><span class="jus-bar" style="height:87%"></span><span class="jus-hr">18</span></div>
+    <div class="jus-col"><span class="jus-val">72</span><span class="jus-bar" style="height:84%"></span><span class="jus-hr">19</span></div>
+    <div class="jus-col"><span class="jus-val">65</span><span class="jus-bar" style="height:76%"></span><span class="jus-hr">20</span></div>
+    <div class="jus-col"><span class="jus-val">77</span><span class="jus-bar" style="height:90%"></span><span class="jus-hr">21</span></div>
+    <div class="jus-col"><span class="jus-val">60</span><span class="jus-bar" style="height:70%"></span><span class="jus-hr">22</span></div>
+    <div class="jus-col"><span class="jus-val">50</span><span class="jus-bar" style="height:58%"></span><span class="jus-hr">23</span></div>
+  </div>
+</div>
+<div class="jus-legend">
+  <span><i class="jus-sw out"></i> Fuera de horario (0 a 7 h y 18 a 23 h)</span>
+  <span><i class="jus-sw in"></i> Horario call center (8 a 17 h)</span>
+</div>
+
+<div class="jus-h">De dónde vienen los leads</div>
+<div class="jus-channel">
+  <div class="jus-chrow lead-row">
+    <span class="jus-chname">Facebook Ads</span>
+    <span class="jus-chtrack"><span class="jus-chfill" style="width:95%"></span></span>
+    <span class="jus-chval">95% · 1238</span>
+  </div>
+</div>
+<p class="jus-sub jus-tight">Son leads pagados. En medios de pago la velocidad de respuesta define si el lead convierte o se enfría. <b>El 59% de los leads de Facebook Ads cae fuera de horario</b>: hoy uno que entra a las 21:00 espera hasta el siguiente día hábil.</p>
+
+<div class="jus-h">Dónde impacta más, por división</div>
+<div class="jus-div">
+  <div class="jus-divrow">
+    <div class="jus-divtop"><span class="jus-divname">Venta de inmuebles</span><span class="jus-divmeta mono">62% del volumen</span></div>
+    <span class="jus-divtag max">Máximo impacto</span>
+    <div class="jus-bars">
+      <div class="jus-barrow"><span class="jus-barlbl">Leads</span><div class="jus-track"><span class="jus-volfill" style="width:100%"></span></div><span class="jus-barval">804</span></div>
+      <div class="jus-barrow"><span class="jus-barlbl">Fuera de horario</span><div class="jus-track"><span class="jus-ofill" style="width:61%"></span></div><span class="jus-barval">61%</span></div>
+    </div>
+  </div>
+  <div class="jus-divrow">
+    <div class="jus-divtop"><span class="jus-divname">Comercial</span><span class="jus-divmeta mono">36% del volumen</span></div>
+    <span class="jus-divtag">Alto impacto</span>
+    <div class="jus-bars">
+      <div class="jus-barrow"><span class="jus-barlbl">Leads</span><div class="jus-track"><span class="jus-volfill" style="width:59%"></span></div><span class="jus-barval">471</span></div>
+      <div class="jus-barrow"><span class="jus-barlbl">Fuera de horario</span><div class="jus-track"><span class="jus-ofill" style="width:51%"></span></div><span class="jus-barval">51%</span></div>
+    </div>
+  </div>
+  <div class="jus-divrow muted">
+    <div class="jus-divtop"><span class="jus-divname">Industrial</span><span class="jus-divmeta mono">2% del volumen</span></div>
+    <span class="jus-divtag off">No priorizar voz aquí</span>
+    <div class="jus-bars">
+      <div class="jus-barrow"><span class="jus-barlbl">Leads</span><div class="jus-track"><span class="jus-volfill" style="width:3.2%"></span></div><span class="jus-barval">26</span></div>
+      <div class="jus-barrow"><span class="jus-barlbl">Fuera de horario</span><div class="jus-track"><span class="jus-ofill" style="width:15%"></span></div><span class="jus-barval">15%</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="vs-head">
+  <span class="eyebrow">Decisión de canal</span>
+  <h3 class="vs-title">Voz vs chat: ¿por dónde empezar?</h3>
+</div>
+<p class="jus-sub">El 95% de los leads entra por un formulario de Facebook: llegan como texto, con nombre y teléfono, no como llamada. La primera respuesta natural es por WhatsApp o Messenger, por donde el lead ya está. Voz y chat no son lo mismo y no compiten; cada uno gana en su terreno.</p>
+
+<div class="fin-scroll">
+  <table class="tbl vs-tbl">
+    <thead>
+      <tr>
+        <th>Dimensión</th>
+        <th>Chatbot · WhatsApp / Messenger</th>
+        <th>Voicebot · llamada</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="hook">Cómo contacta</td><td>Mensaje de texto, asíncrono</td><td>Llamada telefónica, en vivo</td></tr>
+      <tr><td class="hook">Encaja con el lead de Facebook</td><td class="vs-w"><span class="vs-win" aria-label="gana"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h12v1.5h3a1 1 0 0 1 1 1c0 2.6-1.9 4.8-4.4 5.3A6 6 0 0 1 13 15.6V18h3l.6 2.5H7.4L8 18h3v-2.4a6 6 0 0 1-4.6-3.8C3.9 11.3 2 9.1 2 6.5a1 1 0 0 1 1-1h3V4zm0 3H3.6C3.9 8.4 4.7 9.4 6 9.9V7zm12 0v2.9c1.3-.5 2.1-1.5 2.4-2.9H18z"/></svg>Gana</span><b>Sí, responde por donde llegó</b></td><td>Parcial: hay que marcarle a un número</td></tr>
+      <tr><td class="hook">Fricción para el lead</td><td class="vs-w"><span class="vs-win" aria-label="gana"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h12v1.5h3a1 1 0 0 1 1 1c0 2.6-1.9 4.8-4.4 5.3A6 6 0 0 1 13 15.6V18h3l.6 2.5H7.4L8 18h3v-2.4a6 6 0 0 1-4.6-3.8C3.9 11.3 2 9.1 2 6.5a1 1 0 0 1 1-1h3V4zm0 3H3.6C3.9 8.4 4.7 9.4 6 9.9V7zm12 0v2.9c1.3-.5 2.1-1.5 2.4-2.9H18z"/></svg>Gana</span><b>Baja: contesta cuando puede</b></td><td>Alta: contestar a un número desconocido, a veces de noche</td></tr>
+      <tr><td class="hook">Velocidad de calificación</td><td>Varias idas y vueltas</td><td class="vs-w"><span class="vs-win" aria-label="gana"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h12v1.5h3a1 1 0 0 1 1 1c0 2.6-1.9 4.8-4.4 5.3A6 6 0 0 1 13 15.6V18h3l.6 2.5H7.4L8 18h3v-2.4a6 6 0 0 1-4.6-3.8C3.9 11.3 2 9.1 2 6.5a1 1 0 0 1 1-1h3V4zm0 3H3.6C3.9 8.4 4.7 9.4 6 9.9V7zm12 0v2.9c1.3-.5 2.1-1.5 2.4-2.9H18z"/></svg>Gana</span><b>Una llamada resuelve</b></td></tr>
+      <tr><td class="hook">Costo aprox.</td><td class="vs-w"><span class="vs-win" aria-label="gana"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h12v1.5h3a1 1 0 0 1 1 1c0 2.6-1.9 4.8-4.4 5.3A6 6 0 0 1 13 15.6V18h3l.6 2.5H7.4L8 18h3v-2.4a6 6 0 0 1-4.6-3.8C3.9 11.3 2 9.1 2 6.5a1 1 0 0 1 1-1h3V4zm0 3H3.6C3.9 8.4 4.7 9.4 6 9.9V7zm12 0v2.9c1.3-.5 2.1-1.5 2.4-2.9H18z"/></svg>Gana</span><b>≈ $0.02 a $0.06 USD por conversación</b> <span class="vs-tiny">~10 mensajes: en WhatsApp se cobra el primero (plantilla) y las respuestas dentro de la ventana de 24h son gratis, más el LLM. México</span></td><td>$0.24 a $0.50 USD por llamada <span class="vs-tiny">4 min, panel Financiero</span></td></tr>
+      <tr><td class="hook">Mejor para</td><td>Primer toque, calificación masiva, leads tibios, fuera de horario</td><td>Leads calientes, alto valor (Comercial / Industrial), urgencia</td></tr>
+      <tr><td class="hook">Despliegue</td><td class="vs-w"><span class="vs-win" aria-label="gana"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h12v1.5h3a1 1 0 0 1 1 1c0 2.6-1.9 4.8-4.4 5.3A6 6 0 0 1 13 15.6V18h3l.6 2.5H7.4L8 18h3v-2.4a6 6 0 0 1-4.6-3.8C3.9 11.3 2 9.1 2 6.5a1 1 0 0 1 1-1h3V4zm0 3H3.6C3.9 8.4 4.7 9.4 6 9.9V7zm12 0v2.9c1.3-.5 2.1-1.5 2.4-2.9H18z"/></svg>Gana</span><b>Más simple y rápido</b></td><td>Más complejo: el stack de voz actual ya batalla</td></tr>
+      <tr><td class="hook">Rastro</td><td class="vs-w"><span class="vs-win" aria-label="gana"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h12v1.5h3a1 1 0 0 1 1 1c0 2.6-1.9 4.8-4.4 5.3A6 6 0 0 1 13 15.6V18h3l.6 2.5H7.4L8 18h3v-2.4a6 6 0 0 1-4.6-3.8C3.9 11.3 2 9.1 2 6.5a1 1 0 0 1 1-1h3V4zm0 3H3.6C3.9 8.4 4.7 9.4 6 9.9V7zm12 0v2.9c1.3-.5 2.1-1.5 2.4-2.9H18z"/></svg>Gana</span><b>Queda por escrito</b></td><td>Requiere transcripción</td></tr>
+    </tbody>
+    <tfoot>
+      <tr class="vs-tally">
+        <td class="wf">Ventajas</td>
+        <td><span class="vs-count">5</span> <span class="vs-tinylbl">de 6 comparables</span></td>
+        <td><span class="vs-count">1</span> <span class="vs-tinylbl">de 6 comparables</span></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="vs-steps">
+  <div class="vs-step">
+    <span class="vs-num">1</span>
+    <div>
+      <h4 class="vs-st">Empezar por el chatbot</h4>
+      <p class="vs-sp">WhatsApp o Messenger, respuesta automática en cuanto llega el formulario, 24/7. Califica y agenda. Es el canal nativo del lead, el más barato y el de menor fricción. Cubre el 57% que entra fuera de horario sin un solo turno extra.</p>
+    </div>
+  </div>
+  <div class="vs-step">
+    <span class="vs-num">2</span>
+    <div>
+      <h4 class="vs-st">Sumar el voicebot como escalamiento</h4>
+      <p class="vs-sp">Para leads calientes o de alto valor (Comercial, Industrial), o cuando el lead pide llamada. La voz convierte mejor donde el caso es complejo o urgente. No reemplaza al chat: lo cierra.</p>
+    </div>
+  </div>
+</div>
+
+<div class="callout">
+  <span class="mk">La secuencia</span>
+  <p>No es uno u otro. <b>Chat como puerta de entrada ahora, voz como cierre selectivo después.</b> Empezar simple y sumar voz donde pague. De paso, el stack de voz actual es inestable (ver Ingeniería inversa): arrancar con chat baja el riesgo y el costo mientras se estabiliza o se decide la voz.</p>
+</div>
+
+<p class="jus-method mono">Costos de chat: WhatsApp Business Platform (Meta), México, jun 2026, estimando una conversación de ~10 mensajes (1 plantilla cobrada + respuestas gratis en la ventana de 24h + LLM). Speed to lead: contactar en menos de 5 min multiplica por 9 la probabilidad de convertir. Cifras de referencia, no facturas.</p>
+
+<style>
+  .vs-head{margin-top:50px;padding-top:36px;border-top:1px solid var(--hair)}
+  .vs-title{font-family:var(--serif);font-size:clamp(27px,3.6vw,37px);font-weight:600;letter-spacing:-.012em;line-height:1.08;margin:14px 0 16px}
+  .vs-tbl{min-width:720px}
+  .vs-tbl td b{color:var(--ink);font-weight:600}
+  .vs-w{background:var(--brand-wash)}
+  .vs-tbl tr:hover .vs-w{background:var(--brand-wash)}
+  .vs-win{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--brand);padding:3px 7px 3px 5px;margin-right:9px;vertical-align:2px;white-space:nowrap}
+  .vs-win svg{width:12px;height:12px}
+  .vs-tally td{background:var(--panel);border-top:2px solid var(--brand)}
+  .vs-tbl tr.vs-tally:hover td{background:var(--panel)}
+  .vs-count{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--brand);line-height:1;vertical-align:-2px}
+  .vs-tinylbl{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink-soft);text-transform:uppercase}
+  .vs-tiny{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35}
+  .vs-steps{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}
+  .vs-step{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--hair);padding:22px 22px}
+  .vs-num{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--brand);line-height:1;flex:0 0 auto}
+  .vs-st{font-family:var(--serif);font-size:18px;font-weight:600;margin:2px 0 8px;line-height:1.2}
+  .vs-sp{margin:0;font-size:14px;color:var(--ink-soft);line-height:1.55}
+  @media(max-width:620px){.vs-steps{grid-template-columns:1fr}}
+</style>
+
+<div class="callout">
+  <span class="mk">El cierre</span>
+  <p>El voicebot no cierra la venta solo. <b>Califica, responde rápido y mantiene caliente al lead</b> hasta que el asesor entra en horario. Industrial casi no aplica. No es magia: es cobertura y velocidad.</p>
+</div>
+
+<p class="jus-method mono">Base: 1301 leads del CRM, enero a junio de 2026. Horario de oficina considerado L a V 8:00 a 18:00. Cifras calculadas sobre los campos Created Time y Lead Source del export.</p>
+
+<style>
+  .jus-hero{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.4fr);gap:36px;align-items:center;border:1px solid var(--hair);padding:30px 30px;background:var(--panel-2);margin-bottom:14px}
+  .jus-heroL{border-right:1px solid var(--hair);padding-right:30px}
+  .jus-bignum{font-family:var(--serif);font-weight:600;font-size:clamp(76px,13vw,128px);line-height:.86;letter-spacing:-.03em;color:var(--brand)}
+  .jus-pct{font-size:.42em;vertical-align:super;font-weight:500}
+  .jus-heroLbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:14px;line-height:1.5;max-width:24ch}
+  .jus-heroP{font-size:16px;color:var(--ink-soft);margin:0 0 20px}
+  .jus-heroP b{color:var(--ink);font-weight:600}
+  .jus-splitbar{display:flex;height:34px;border:1px solid var(--hair);overflow:hidden;background:var(--paper)}
+  .jus-seg{display:flex;align-items:center;padding:0 12px}
+  .jus-seg.in{background:var(--slate)}
+  .jus-seg.out{background:var(--brand)}
+  .jus-segn{font-family:var(--mono);font-size:13px;font-weight:600;color:#fff}
+  .jus-splitlbl{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:11px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .jus-splitlbl span{display:inline-flex;align-items:center;gap:8px}
+  .jus-sw{width:11px;height:11px;flex:0 0 auto}
+  .jus-sw.in{background:var(--slate)}
+  .jus-sw.out{background:var(--brand)}
+
+  /* --- bloque ejecutivo: Tiempo / Costo / Calidad --- */
+  .jus-axes{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);margin-bottom:6px}
+  .jus-axis{background:var(--paper);padding:24px 24px 26px;display:flex;flex-direction:column}
+  .jus-axeye{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);font-weight:500;display:flex;align-items:center;gap:9px}
+  .jus-axeye::before{content:"";width:22px;height:2px;background:var(--brand)}
+  .jus-axn{font-family:var(--serif);font-size:46px;font-weight:600;line-height:1;letter-spacing:-.015em;color:var(--ink);margin:16px 0 12px}
+  .jus-axu{font-size:.5em;color:var(--ink-soft);font-weight:500}
+  .jus-axh{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.16;letter-spacing:-.01em;color:var(--ink);margin:15px 0 12px}
+  .jus-axp b{color:var(--ink);font-weight:600}
+  .jus-axp{margin:0;font-size:14px;color:var(--ink-soft);line-height:1.55}
+  .jus-axlim{display:block;margin-top:9px;padding-top:9px;border-top:1px solid var(--hair);font-size:13px;color:var(--amber)}
+
+  .jus-h{font-family:var(--serif);font-size:clamp(21px,2.5vw,26px);font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1.12;margin:52px 0 16px;padding-left:15px;border-left:3px solid var(--brand)}
+  .jus-sub{font-size:15px;color:var(--ink-soft);max-width:70ch;margin:0 0 16px}
+  .jus-sub.jus-tight{margin-top:14px}
+  .jus-sub b{color:var(--ink);font-weight:600}
+
+  .jus-chart-wrap{border:1px solid var(--hair);background:var(--panel-2);padding:22px 20px 14px;overflow-x:auto}
+  .jus-chart{position:relative;display:flex;align-items:flex-end;gap:5px;height:210px;min-width:560px;padding-top:34px}
+  .jus-band{position:absolute;left:calc((100% - 115px)/3 + 40px);width:calc((100% - 115px)*5/12 + 45px);top:34px;bottom:26px;background:rgba(46,74,90,.06);border-left:1px dashed #9fb0ba;border-right:1px dashed #9fb0ba;pointer-events:none}
+  .jus-band::after{content:"";position:absolute;left:0;right:0;top:0;border-top:2px solid var(--slate);opacity:.5}
+  .jus-band span{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);font-weight:600;background:var(--panel-2);padding:3px 9px;border:1px solid #c9d2d8;white-space:nowrap}
+  .jus-col{position:relative;z-index:1;flex:1 1 0;min-width:16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .jus-val{font-family:var(--mono);font-size:10px;color:var(--ink-soft);margin-bottom:4px}
+  .jus-bar{width:100%;max-width:22px;background:var(--brand);transition:filter .15s ease}
+  .jus-bar.office{background:var(--slate)}
+  .jus-col:hover .jus-bar{filter:brightness(.88)}
+  .jus-hr{font-family:var(--mono);font-size:10px;color:var(--ink-soft);margin-top:7px}
+  .jus-legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .jus-legend span{display:inline-flex;align-items:center;gap:8px}
+
+  .jus-channel{border:1px solid var(--hair);background:var(--paper)}
+  .jus-chrow.lead-row{display:flex;align-items:center;gap:16px;padding:20px 22px}
+  .jus-chname{font-family:var(--serif);font-size:19px;font-weight:600;flex:0 0 130px}
+  .jus-chtrack{flex:1 1 auto;height:30px;background:var(--panel);border:1px solid var(--hair);overflow:hidden}
+  .jus-chfill{display:block;height:100%;background:var(--brand)}
+  .jus-chval{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--brand);flex:0 0 auto}
+
+  .jus-div{display:flex;flex-direction:column;gap:1px;background:var(--hair);border:1px solid var(--hair)}
+  .jus-divrow{background:var(--paper);padding:18px 22px;display:grid;grid-template-columns:1fr auto;grid-template-areas:"top tag" "bars bars";gap:12px 16px;align-items:center}
+  .jus-divtop{grid-area:top;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .jus-divname{font-family:var(--serif);font-size:19px;font-weight:600}
+  .jus-divmeta{font-family:var(--mono);font-size:11px;color:var(--ink-soft);letter-spacing:.04em;text-transform:uppercase}
+  .jus-bars{grid-area:bars;display:flex;flex-direction:column;gap:8px}
+  .jus-barrow{display:grid;grid-template-columns:118px 1fr 50px;align-items:center;gap:12px}
+  .jus-barlbl{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);text-align:right}
+  .jus-track{position:relative;height:22px;background:var(--panel);border:1px solid var(--hair);overflow:hidden}
+  .jus-volfill{position:absolute;left:0;top:0;bottom:0;background:var(--slate)}
+  .jus-ofill{position:absolute;left:0;top:0;bottom:0;background:var(--brand)}
+  .jus-barval{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);text-align:right}
+  .jus-divtag{grid-area:tag;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border:1px solid #ecc9ca;background:var(--brand-wash);padding:5px 10px;white-space:nowrap;align-self:start}
+  .jus-divtag.max{color:#fff;background:var(--brand);border-color:var(--brand)}
+  .jus-divrow.muted .jus-divname{color:var(--ink-soft)}
+  .jus-divrow.muted .jus-volfill,.jus-divrow.muted .jus-ofill{background:#aab1bb}
+  .jus-divrow.muted .jus-barval{color:var(--ink-soft)}
+  .jus-divtag.off{color:var(--ink-soft);background:var(--panel);border-color:var(--hair)}
+
+  .jus-method{font-size:12px;color:var(--ink-soft);letter-spacing:.01em;margin:18px 0 0;line-height:1.55;max-width:80ch}
+
+  @media(max-width:760px){
+    .jus-axes{grid-template-columns:1fr}
+  }
+  @media(max-width:620px){
+    .jus-hero{grid-template-columns:1fr;gap:24px;padding:24px 22px}
+    .jus-heroL{border-right:none;border-bottom:1px solid var(--hair);padding-right:0;padding-bottom:20px}
+    .jus-chrow.lead-row{flex-wrap:wrap;gap:10px}
+    .jus-chname{flex:0 0 100%}
+    .jus-divrow{grid-template-columns:1fr;grid-template-areas:"top" "tag" "bars"}
+    .jus-divtag{justify-self:start}
+    .jus-barrow{grid-template-columns:82px 1fr 44px;gap:10px}
+  }
+</style>
+
+    </div>
+  </section>
+</div>
+
 <footer>
   <div class="wrap" style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;width:100%">
     <span>ATISA Voicebot · Ingeniería inversa</span>
@@ -806,6 +1312,20 @@
       redraw();
     });
   }
+})();
+</script>
+<script>
+(function(){
+  var links = document.querySelectorAll('.nav-links [data-view]');
+  var views = {ing:document.getElementById('v-ing'), fin:document.getElementById('v-fin'), val:document.getElementById('v-val')};
+  function show(name){
+    Object.keys(views).forEach(function(k){ if(views[k]) views[k].classList.toggle('active', k===name); });
+    links.forEach(function(l){ l.classList.toggle('on', l.getAttribute('data-view')===name); });
+    var v = views[name];
+    if(v) v.querySelectorAll('.rv').forEach(function(e){ e.classList.add('in'); });
+    window.scrollTo(0,0);
+  }
+  links.forEach(function(l){ l.addEventListener('click', function(e){ e.preventDefault(); show(l.getAttribute('data-view')); }); });
 })();
 </script>
 </body>
